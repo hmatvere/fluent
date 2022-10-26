@@ -1,6 +1,7 @@
 import React from 'react'
 import { Cursor, useTypewriter } from 'react-simple-typewriter';
 import BackgroundCircles from './BackgroundCircles';
+import Image from 'next/image';
 
 
 type Props = {}
@@ -9,20 +10,29 @@ function Hero({}: Props) {
     const [text] = useTypewriter ({
         words: [
             "Welcome To Fluent",
-            "We Will Turn You Into A Bilingual",
-            "...Scroll Down To Learn More",
+            "We will turn you into a bilingual",
+            "...Scroll down or click one of the links below to learn more",
         ],
         loop: 0,
         delaySpeed: 2000,
       });
 
   return (
-    <div className='h-screen flex flex-col space-y-8 items-center justify-center'>
+    <div className='h-screen flex flex-col space-y-8 items-center justify-center text-center overflow-hidden'>
         <BackgroundCircles />
-        <h1>
-            <span>{text}</span>
+        <Image
+            src='/../public/fluent.png'
+            alt='Fluent Logo'
+            width={300}
+            height={300}
+        />
+        <h1 className='text-5xl lg:text-3xl font-semibold px-10'>
+            <span className='mr-3'>{text}</span>
             <Cursor cursorColor='#00E7F2' />
         </h1>
+        <div>
+            
+        </div>
     </div>
   )
 }
