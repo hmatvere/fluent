@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Header from '../components/Header'
 import Hero from '../components/Hero'
+import Services from '../components/Services'
 import styles from '../styles/Home.module.css'
 
 export default function Home() {
@@ -13,15 +14,14 @@ export default function Home() {
       <Header />
 
       {/* Hero */}
-      <section id='hero' className='snap-center'>
+      <section id='hero' className='snap-start'>
         <Hero />
       </section>
 
       {/* Services */}
-      <div> 
-        <h1>Services</h1>
-              
-      </div>
+      <section id='services' className='snap-center'>
+        <Services />
+      </section>
       {/* Contact */}
       
     </div>

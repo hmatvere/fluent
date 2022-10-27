@@ -10,7 +10,7 @@ function Hero({}: Props) {
     const [text] = useTypewriter ({
         words: [
             "Welcome To Fluent",
-            "We will turn you into a language wizard",
+            "We will turn you into a Language Wizard",
             "...Scroll down to learn more",
         ],
         loop: 0,
@@ -31,7 +31,7 @@ function Hero({}: Props) {
             <Cursor cursorColor='#00E7F2' />
         </h1>
         <div>
-            
+
 
         </div>
     </div>
