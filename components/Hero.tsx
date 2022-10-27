@@ -10,8 +10,8 @@ function Hero({}: Props) {
     const [text] = useTypewriter ({
         words: [
             "Welcome To Fluent",
-            "We will turn you into a bilingual",
-            "...Scroll down or click one of the links below to learn more",
+            "We will turn you into a language wizard",
+            "...Scroll down to learn more",
         ],
         loop: 0,
         delaySpeed: 2000,
@@ -32,6 +32,7 @@ function Hero({}: Props) {
         </h1>
         <div>
             
+
         </div>
     </div>
   )

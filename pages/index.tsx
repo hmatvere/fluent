@@ -17,13 +17,13 @@ export default function Home() {
         <Hero />
       </section>
 
-
-      {/* About */}
-
       {/* Services */}
-
+      <div> 
+        <h1>Services</h1>
+              
+      </div>
       {/* Contact */}
-
+      
     </div>
   )
 }
