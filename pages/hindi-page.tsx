@@ -1,7 +1,11 @@
 import Head from "next/head";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import "regenerator-runtime/runtime"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+//import fetch from 'node-fetch';
+//import { FileReader } from 'file-reader'
+//import Config from 'react-native-config';
+//import RNFS from 'react-native-fs';
 //import * as googleTTS from 'google-tts-api'; 
 //const textToSpeech = require('@google-cloud/text-to-speech');
 //import * as textToSpeech from '@google-cloud/text-to-speech';
@@ -21,6 +25,7 @@ import parse from 'csv-parse';
 import * as TextEncoder from 'text-encoding';
 //import * as parse from 'csv-parse/lib/sync';
 import { debug } from "util";
+
 
 const LANGUAGE_MAP = {
   'हिन्दी': 'hi-IN', //हिन्दी
@@ -43,46 +48,10 @@ const Game = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isGuessing, setIsGuessing] = useState(false)
   const [dictionaryWords, setDictionaryWords] = useState([]);
-  //const fs = require('fs');
-  //const util = require('util');
-
-
-  //google tts test
-  //const client = new TextToSpeechClient();
-
-  // Creates a client
-  // const client = new textToSpeech.TextToSpeechClient();
-
-  // async function quickStart() {
-  //   // The text to synthesize
-  //   const text = 'hello, world!';
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isFinishedSpeaking, setIsFinishedSpeaking] = useState(false);
   
-    
-  
-  //   // Construct the request
-  //   const request = {
-  //     input: {text: text},
-  //     // Select the language and SSML voice gender (optional)
-  //     voice: {languageCode: 'en-US', ssmlGender: 'NEUTRAL'},
-  //     // select the type of audio encoding
-  //     audioConfig: {audioEncoding: 'MP3'},
-  //   } as ISynthesizeSpeechRequest;
-  
-  //   // Performs the text-to-speech request
-  //   const response = await client.synthesizeSpeech(request);
-  
-  //   // Get the audio content from the response
-  //   const audioContent = response[0].audioContent;
-  
-  //   // Create an HTML5 audio element
-  //   const audio = new Audio();
-  
-  //   // Set the audio content as the source of the audio element
-  //   audio.src = 'data:audio/mp3;base64,' + Buffer.from(audioContent).toString('base64');
-  
-  //   // Play the audio
-  //   audio.play();
-  // }
+ 
   
 
   const commands = Object.keys(LANGUAGE_MAP).map(language => ({
@@ -98,11 +67,70 @@ const Game = () => {
   }))
 
 
-  const googleTTS = require('google-tts-api'); // CommonJS
+ 
+//---------------------------------------------------------  non html5 version  below
+  function playText(text: string, langCode: string) {
+    axios.get('http://localhost:5000/api/pronounce', {
+      params: {
+        text: text,
+        langCode: langCode
+      },
+      responseType: "blob",
+    })
+    .then(response => {
+      const binaryData = response.data;
+      const blob = new Blob([binaryData], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.preload = "none";
+      console.log("url:",url);
+      console.log("audio.src",audio.src);
+      console.log("audio:",audio);
+      //const audio = new Audio(response.data);
+      //console.log(response.data);
+      audio.play();
+    })
+    .catch(error => {
+      console.error(error);
+    });
+};
+//--------------------------------------------------------- html5 version  below
+
+
+// function playText(text: string, langCode: string) {
+//   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+//   axios
+//     .get("http://localhost:5000/api/pronounce", {
+//       params: {
+//         text: text,
+//         langCode: langCode,
+//       },
+//     })
+//     .then((response) => {
+//       const binaryData = response.data;
+//       const blob = new Blob([binaryData], { type: "audio/mpeg" });
+//       const url = URL.createObjectURL(blob);
+//       setAudioUrl(url);
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+
+//   return (
+//     <div>
+//       {audioUrl ? <AudioPlayer src={audioUrl} /> : null}
+//     </div>
+//   );
+// }
+
+
+
   const { transcript } = useSpeechRecognition({ commands })
   const { resetTranscript } = useSpeechRecognition()
 
-  
+
+
   useEffect(() => {
     setGuess(transcript);
   }, [transcript]);
@@ -137,13 +165,16 @@ const Game = () => {
           'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv',
           { responseType: 'text' }
       );
-      parse(response.data, {columns: true, trim: true}, function(err, data){
+      parse(response.data, {columns: true, trim: true}, function(err: any, data: any[]){
           if(err) throw err;
-          let hindiWords = data.map(row => row.hword);
+          let hindiWords = data.map((row: { hword: any; }) => row.hword);
           //console.log("yes@@",data[0].hword);
           //console.log(hindiWords[0]); // hindiWords is not loaded.
           //console.log("yes",hindiWords[Math.floor(Math.random() * hindiWords.length)]);
-          setCurrentWord(hindiWords[Math.floor(Math.random() * hindiWords.length)]);
+          const currentWord_ = hindiWords[Math.floor(Math.random() * hindiWords.length)];
+          setCurrentWord(currentWord_);
+
+          playText(currentWord_, 'hi-IN');
       });
   } catch (error) {
       console.log(error);
@@ -174,38 +205,15 @@ const Game = () => {
     }
   }
 
-  
-
-
+ 
 
   const startGuessing = async () => {
     setGuess('');
     setIsGuessing(true)
-    setTimeout(() => {
-      setGuess('');
-    }, 1000);
-
-    //speakText("Hello World", "AIzaSyCx_k0uXPoIOZWIo6qVUm9uasyK8ql6Mt4")
-   // console.log("hellow")
-  // get audio URL
-  //   const url = googleTTS.getAudioUrl('Hello World', {
-  //     lang: 'en-GB',
-  //     slow: false,
-  //     host: 'https://translate.google.com',
-  // });
-
-  //   const audio = new Audio(url);
-  //   audio.play();
-  //   console.log(url); 
-
-}
-
-  
-
-   //https://stackoverflow.com/questions/74805486/error-hydration-failed-with-react-speech-recognition
- // if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
-  //  return null
- // }
+   // setTimeout(() => {
+   //   setGuess('');
+    //}, 10000000);
+  }
 
   return (
 
