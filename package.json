@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.3.0",
+    "@fortawesome/free-solid-svg-icons": "^6.3.0",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "@google-cloud/text-to-speech": "^4.1.0",
     "@google-cloud/translate": "^7.2.0",
     "csv-parse": "^5.3.3",
@@ -25,6 +28,7 @@
     "nodemon": "^2.0.20",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-modal": "^3.16.1",
     "react-native-config": "^1.5.0",
     "react-native-fs": "^2.20.0",
     "react-router-dom": "^6.4.5",
@@ -43,6 +47,7 @@
     "@types/node": "^18.11.6",
     "@types/react": "18.0.23",
     "@types/react-dom": "18.0.7",
+    "@types/react-modal": "^3.13.1",
     "@types/react-speech-recognition": "^3.9.0",
     "@types/regenerator-runtime": "^0.13.1",
     "autoprefixer": "^10.4.12",

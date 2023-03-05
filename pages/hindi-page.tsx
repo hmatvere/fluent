@@ -2,6 +2,7 @@ import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import "regenerator-runtime/runtime"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import ReactModal from 'react-modal';
 //import fetch from 'node-fetch';
 //import { FileReader } from 'file-reader'
 //import Config from 'react-native-config';
@@ -16,6 +17,7 @@ import ISynthesizeSpeechRequest from '@google-cloud/text-to-speech';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import HindiReadWords from "../components/HindiReadWords";
+import LanguageSelectModal from '../components/languageselectmodal';
 import Services from "../components/Services";
 import styles from "../styles/Home.module.css";
 import axios from 'axios';
@@ -55,7 +57,8 @@ const Game = () => {
 	const [translateError, setTranslateError] = useState(null);
 	const audioRef = useRef<HTMLAudioElement>(null);
 	const [isFinishedSpeaking, setIsFinishedSpeaking] = useState(false);
-	
+	const [isModalOpen, setIsModalOpen] = useState(true);
+
 
 
 
@@ -73,12 +76,12 @@ const Game = () => {
 
 
 	const { transcript, listen } = useSpeechRecognition({ commands })
-	
+
 	const { resetTranscript } = useSpeechRecognition()
 
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
-		SpeechRecognition.abortListening();
+		//SpeechRecognition.abortListening();
 		axios.get('http://localhost:5000/api/pronounce', {
 			params: {
 				text: text,
@@ -99,13 +102,13 @@ const Game = () => {
 				//console.log(response.data);
 				audio.play();
 
-				
-       // Disable audio listener until TTS finishes playing
-			 // Resume listening after the audio finishes playing
-			 audio.addEventListener('ended', () => {
-				listen({ continuous: true, language: language });
-			});
-      
+
+				// Disable audio listener until TTS finishes playing
+				// Resume listening after the audio finishes playing
+				//audio.addEventListener('ended', () => {
+				//SpeechRecognition.startListening({ continuous: true, language: language });
+				//});
+
 			})
 			.catch(error => {
 				console.error(error);
@@ -177,7 +180,6 @@ const Game = () => {
 				console.log(translation);
 				setCurrentWord(currentWord_);
 				playText(currentWord_, 'hi-IN');
-
 			});
 		} catch (error) {
 			console.log(error);
@@ -219,80 +221,88 @@ const Game = () => {
 		//}, 10000000);
 	}
 
+
+
 	return (
 		<div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
-			<Head>
-				<title>Word Guessing Game</title>
-				<link rel="icon" href="/favicon.ico" />
-			</Head>
-			<Header />
-			<main className="max-w-3xl mx-auto py-8 text-center">
-				<h1 className="text-3xl font-bold mb-8">
-					Pronunciation skills
-				</h1>
-				{isPlaying ? (
-					<div className="flex flex-col items-center">
-						<div className="text-xl mb-4">
-							<span>Language: Hindi</span>
-							<span className="ml-4">Points: {points}</span>
-						</div>
-						<div className="text-2xl mb-8">
-							<span></span>
-							<div>
-								<span style={{ marginRight: "15px" }}>Hindi: {currentWord}</span>
-								<span>English: {translatedWord}</span>
-							</div>
-						</div>
-						<div>
-							{isGuessing ? (
-								<div>
-									{guess ? (
-										<>
-											<span>{guess}</span>
-										</>
-									) : (
-										<span>Listening for word...</span>
-									)}
-								</div>
-							) : null} {/* Remove the button from here */}
-						</div>
-						<span>{guess}</span>
-						<button
-							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
-							onClick={() => {
-								handleReset();
-								guessWord();
-
-							}}
-						>
-							Guess
-						</button>
+		  <Head>
+			<title>Word Guessing Game</title>
+			<link rel="icon" href="/favicon.ico" />
+		  </Head>
+		  <Header />
+		  <main className="max-w-3xl mx-auto py-8 text-center">
+			{isModalOpen && (
+			  <LanguageSelectModal
+				isOpen={isModalOpen}
+				setIsOpen={setIsModalOpen}
+				language={language}
+				setLanguage={setLanguage}
+			  />
+			)}
+			<h1 className="text-3xl font-bold mb-8">
+			  Pronunciation skills
+			</h1>
+			{isPlaying ? (
+			  <div className="flex flex-col items-center">
+				<div className="text-xl mb-4">
+				  <span>Language: Hindi</span>
+				  <span className="ml-4">Points: {points}</span>
+				</div>
+				<div className="text-2xl mb-8">
+				  <span></span>
+				  <div>
+					<span style={{ marginRight: "15px" }}>Hindi: {currentWord}</span>
+					<span>English: {translatedWord}</span>
+				  </div>
+				</div>
+				<div>
+				  {isGuessing ? (
+					<div>
+					  {guess ? (
+						<>
+						  <span>{guess}</span>
+						</>
+					  ) : (
+						<span>Listening for word...</span>
+					  )}
 					</div>
-				) : (
-					<div className="flex flex-col items-center">
-						<button
-							className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
-							onClick={startGame}
-						>
-							Start Game
-						</button>
-					</div>
-				)}
-
-			</main>
-			<footer className="absolute bottom-0 w-full text-center py-4">
-				<a
-					href="https://github.com"
-					target="_blank"
-					rel="noopener noreferrer"
+				  ) : null} {/* Remove the button from here */}
+				</div>
+				<span>{guess}</span>
+				<button
+				  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
+				  onClick={() => {
+					handleReset();
+					guessWord();
+				  }}
 				>
-					<div className="text-sm text-gray-500">
-						©2023 Fluent. All rights reserved.
-					</div>
-				</a>
-			</footer>
+				  Guess
+				</button>
+			  </div>
+			) : (
+			  <div className="flex flex-col items-center">
+				<button
+				  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+				  onClick={startGame}
+				>
+				  Start Game
+				</button>
+			  </div>
+			)}
+		  </main>
+		  <footer className="absolute bottom-0 w-full text-center py-4">
+			<a
+			  href="https://github.com"
+			  target="_blank"
+			  rel="noopener noreferrer"
+			>
+			  <div className="text-sm text-gray-500">
+				©2023 Fluent. All rights reserved.
+			  </div>
+			</a>
+		  </footer>
 		</div>
-	)
+	  );
 }
 
-export default Game
+	  export default Game
