@@ -34,8 +34,8 @@ const fs = require('fs');
 const util = require('util');
 
 // credidentials
-const key = "AIzaSyCx_k0uXPoIOZWIo6qVUm9uasyK8ql6Mt4";
-const email = "hmatvere@gmail.com"
+//const key = "AIzaSyCx_k0uXPoIOZWIo6qVUm9uasyK8ql6Mt4";
+//const email = "hmatvere@gmail.com"
 
 // client
 const client = new textToSpeech.TextToSpeechClient();
