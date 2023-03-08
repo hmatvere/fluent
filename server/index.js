@@ -116,16 +116,7 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-async function run() {
-  const completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages: [{role: "user", content: "Hello world"}],
-  });
-  console.log(completion.data.choices[0].text);
 
-}
-
-run().catch(error => console.error(error));
 
 
 // app.post('/api/image', async (req, res) => {
@@ -144,19 +135,43 @@ run().catch(error => console.error(error));
 //   }
 // });
 
+app.get('/api/translate', async (req, res) => {
+  const { word } = req.query;
 
+  try {
+    // Translates the word to English
+    const [translation] = await translate.translate(word, 'en');
 
-app.post('/api/text', async (req, res) => {
-  const { prompt, length } = req.body;
-  const response = await openai.complete({
-    engine: 'davinci',
-    prompt: prompt,
-    maxTokens: length
-  });
-  const { choices } = response.data;
-  const text = choices[0].text.trim();
-  res.send({ text: text });
+    // Sends the translated word back to the client-side
+    res.send({ translation });
+  } catch (e) {
+    console.error(`Failed to translate ${word} to English: ${e}`);
+    res.status(500).send({ error: `Failed to translate ${word} to English` });
+  }
 });
+
+app.get('/api/generate-text', async (req, res) => {
+  //const { prompt, length } = req.body;
+  const { prompt } = req.query;
+  const completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [{role: "user", content: "Hello world"}],
+  });
+  const text = completion.data.choices[0].message;
+  res.send({ text });
+});
+
+//  async function run() {
+//    const completion = await openai.createChatCompletion({
+//      model: "gpt-3.5-turbo",
+//      messages: [{role: "user", content: "Hello world"}],
+//   });
+//    console.log(completion.data.choices[0].text);
+
+ //}
+ //run().catch(error => console.error(error));
+
+
 
 
 

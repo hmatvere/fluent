@@ -197,17 +197,54 @@ const Game = () => {
 	}
 
 
-	//generate definition for word, also if able to use it to generate gujarati words
-	async function generateText(prompt, length) {
-		try {
-		  const response = await axios.post('http://localhost:5000/api/text', { prompt, length });
-		  return response.data.text;
-		} catch (error) {
-		  console.error(error);
-		  return null;
-		}
-	  }
 
+
+	//generate definition for word, also if able to use it to generate gujarati words
+	// async function generateText(prompt: string, length: number) {
+	// 	const response = await axios.post('http://localhost:5000/api/generate-text', { prompt, length });
+	// 	return response.data.text;
+	//   }
+
+	async function generateText(prompt: string) {
+		const response = await axios.get('http://localhost:5000/api/generate-text', {params : {prompt}});
+		return response.data.text;
+	}
+
+	let hasRun = false;
+	async function run() {
+		const text = await generateText("hello");
+		console.log(text);
+	}
+	  
+	run();
+	hasRun = true;
+	
+
+	// async function generateTextRequest(content: any) {
+	// 	try {
+	// 	  const response = await fetch('http://localhost:5000/api/generate-text', {
+	// 		method: 'POST',
+	// 		headers: {
+	// 		  'Content-Type': 'application/json'
+	// 		},
+	// 		body: JSON.stringify({ content })
+	// 	  });
+	  
+	// 	  if (!response.ok) {
+	// 		throw new Error('Failed to generate text');
+	// 	  }
+	  
+	// 	  const data = await response.json();
+	// 	  return data.text;
+	// 	} catch (error) {
+	// 	  console.error(error);
+	// 	  throw error;
+	// 	}
+	//   }
+	// 	  generateTextRequest('Hello world')
+	//   .then(text => console.log(text))
+	//   .catch(error => console.error(error));
+	
 
 	//dictionaries for each language
 	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
