@@ -210,14 +210,14 @@ const Game = () => {
 		return response.data.text;
 	}
 
-	let hasRun = false;
-	async function run() {
-		const text = await generateText("hello");
-		console.log(text);
-	}
+
+	//async function run() {
+	//	const text = await generateText("hello");
+	//	console.log(text);
+	//}
 	  
-	run();
-	hasRun = true;
+	//run();
+	
 	
 
 	// async function generateTextRequest(content: any) {
@@ -285,6 +285,8 @@ const Game = () => {
 				//test
 				//const generatedText = await generateText('hello', 100);
 				//console.log(generatedText); // This will log the generated text to the console
+				const test = await generateText("what does "+currentWord_+" mean?")
+				console.log("test:",test)
 				setCurrentWord(currentWord_);
 				playText(currentWord_, languageCode);
 			});

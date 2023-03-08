@@ -155,7 +155,7 @@ app.get('/api/generate-text', async (req, res) => {
   const { prompt } = req.query;
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
-    messages: [{role: "user", content: "Hello world"}],
+    messages: [{role: "user", content: prompt}],
   });
   const text = completion.data.choices[0].message;
   res.send({ text });
