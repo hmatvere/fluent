@@ -39,9 +39,9 @@ const LANGUAGE_MAP = {
 
 const LANG_ = {
 	'Hindi': 'hi-IN',
-	'Nepalese': 'ne-NP',
+	'Nepali': 'ne-NP',
 	'Gujarati': 'gu-IN',
-  };
+};
 
 const HindiWords = ['नमस्ते', 'अलविदा', 'नमस्ते आ']
 
@@ -52,14 +52,25 @@ const Game = () => {
 
 	
 
+	// Retrieve langCode from localStorage on page load
+	//const storedLangCode = localStorage.getItem('langCode');
+	const storedLangCode = typeof localStorage !== 'undefined' ? localStorage.getItem('langCode') : undefined;
+	const langCode = storedLangCode || 'hi-IN'; // set default to 'en' if no value is stored
+
+	
+	
+
 	const router = useRouter();
-  	//const lang = router.query.lang as string; // Get the value of the lang query parameter
-  	const lang: keyof typeof LANG_ = router.query.lang as keyof typeof LANG_;
+	//const lang = router.query.lang as string; // Get the value of the lang query parameter
+	const lang: keyof typeof LANG_ = router.query.lang as keyof typeof LANG_;
 	// setup the language of the game
-	console.log("lang:",lang);
+	console.log("lang:", lang);
 	const languageCode = LANG_[lang];
 
-	const [language, setLanguage] = useState(languageCode)
+	//hi-IN is default so that we do not cause an error upon refresh, will default to hindi when refresh
+	//ideally use local storage for this but for now this will work as the user should not really need to be refreshing
+	//the page anyway 
+	const [language, setLanguage] = useState(languageCode || 'hi-IN')
 	const [guess, setGuess] = useState('')
 	const [words, setWords] = useState([])
 	const [currentWord, setCurrentWord] = useState(null)
@@ -96,6 +107,7 @@ const Game = () => {
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
 		//SpeechRecognition.abortListening();
+		console.log("langCode::", langCode);
 		axios.get('http://localhost:5000/api/pronounce', {
 			params: {
 				text: text,
@@ -173,13 +185,53 @@ const Game = () => {
 		//return response.data;
 	}
 
+	async function fetchAndAppendImage(prompt: string) {
+		console.log("prompt:", prompt);
+		const response = await axios.get('http://localhost:5000/api/image', { params: { prompt } });;
+		const imageUrl = response.data.imageUrl;
+		
+		const image = new Image();
+		image.src = imageUrl;
+		const container = document.getElementById('image-container');
+		container.appendChild(image);
+	}
+
+
+	//generate definition for word, also if able to use it to generate gujarati words
+	async function generateText(prompt, length) {
+		try {
+		  const response = await axios.post('http://localhost:5000/api/text', { prompt, length });
+		  return response.data.text;
+		} catch (error) {
+		  console.error(error);
+		  return null;
+		}
+	  }
+
+
+	//dictionaries for each language
+	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
+	const nepaliLink = 'https://raw.githubusercontent.com/bdrillard/english-nepali-dictionary/master/English-Nepali%20Dictionary.csv';
+	const gujaratiLink = 'https://raw.githubusercontent.com/bdrillard/english-gujarati-dictionary/master/English-Gujarati%20Dictionary.csv';
+
+	//pick a language link to use
+	let dictionaryLink = '';
+	if (language === 'hi-IN') {
+		dictionaryLink = hindiLink;
+	} else if (language === 'ne-NP') {
+		dictionaryLink = nepaliLink;
+	} else if (language === 'gu-IN') {
+		dictionaryLink = gujaratiLink;
+	} else {
+		console.error(`Unknown language: ${language}`);
+	}
 
 	const { parse } = require('csv-parse');
 	//grab word
 	const fetchRandomWord = async () => {
 		try {
 			const response = await axios.get(
-				'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv',
+				dictionaryLink,
 				{ responseType: 'text' }
 			);
 			parse(response.data, { columns: true, trim: true }, async function (err: any, data: any[]) {
@@ -192,6 +244,10 @@ const Game = () => {
 				const translation = await getTranslatedWord(currentWord_);
 				setTranslatedWord(translation);
 				console.log(translation);
+				//fetchAndAppendImage(translation);
+				//test
+				//const generatedText = await generateText('hello', 100);
+				//console.log(generatedText); // This will log the generated text to the console
 				setCurrentWord(currentWord_);
 				playText(currentWord_, languageCode);
 			});
@@ -227,6 +283,7 @@ const Game = () => {
 
 
 
+
 	const startGuessing = async () => {
 		setGuess('');
 		setIsGuessing(true)
@@ -239,77 +296,79 @@ const Game = () => {
 
 	return (
 		<div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
-		  <Head>
-			<title>Word Guessing Game</title>
-			<link rel="icon" href="/favicon.ico" />
-		  </Head>
-		  <Header />
-		  <main className="max-w-3xl mx-auto py-8 text-center">
-			
-			<h1 className="text-3xl font-bold mb-8">
-			  Pronunciation skills
-			</h1>
-			{isPlaying ? (
-			  <div className="flex flex-col items-center">
-				<div className="text-xl mb-4">
-				  <span>Language: {lang}</span>
-				  <span className="ml-4">Points: {points}</span>
-				</div>
-				<div className="text-2xl mb-8">
-				  <span></span>
-				  <div>
-					<span style={{ marginRight: "15px" }}>Hindi: {currentWord}</span>
-					<span>English: {translatedWord}</span>
-				  </div>
-				</div>
-				<div>
-				  {isGuessing ? (
-					<div>
-					  {guess ? (
-						<>
-						  <span>{guess}</span>
-						</>
-					  ) : (
-						<span>Listening for word...</span>
-					  )}
+			<Head>
+				<title>Word Guessing Game</title>
+				<link rel="icon" href="/favicon.ico" />
+			</Head>
+			<Header />
+			<main className="max-w-3xl mx-auto py-8 text-center">
+
+				<h1 className="text-3xl font-bold mb-8">
+					Pronunciation skills
+				</h1>
+				{isPlaying ? (
+					<div className="flex flex-col items-center">
+						<div className="text-xl mb-4">
+							<span>Language: {lang}</span>
+							<span className="ml-4">Points: {points}</span>
+						</div>
+						<div className="text-2xl mb-8">
+							<span></span>
+							<div>
+								<span style={{ marginRight: "15px" }}>{lang}: {currentWord}</span>
+								<span>English: {translatedWord}</span>
+							</div>
+							<div id="image-container"></div>
+							<div id="word-definition"></div>
+						</div>
+						<div>
+							{isGuessing ? (
+								<div>
+									{guess ? (
+										<>
+											<span>{guess}</span>
+										</>
+									) : (
+										<span>Listening for word...</span>
+									)}
+								</div>
+							) : null} {/* Remove the button from here */}
+						</div>
+						<span>{guess}</span>
+						<button
+							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
+							onClick={() => {
+								handleReset();
+								guessWord();
+							}}
+						>
+							Guess
+						</button>
 					</div>
-				  ) : null} {/* Remove the button from here */}
-				</div>
-				<span>{guess}</span>
-				<button
-				  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
-				  onClick={() => {
-					handleReset();
-					guessWord();
-				  }}
+				) : (
+					<div className="flex flex-col items-center">
+						<button
+							className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+							onClick={startGame}
+						>
+							Start Game
+						</button>
+					</div>
+				)}
+			</main>
+			<footer className="absolute bottom-0 w-full text-center py-4">
+				<a
+					href="https://github.com"
+					target="_blank"
+					rel="noopener noreferrer"
 				>
-				  Guess
-				</button>
-			  </div>
-			) : (
-			  <div className="flex flex-col items-center">
-				<button
-				  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
-				  onClick={startGame}
-				>
-				  Start Game
-				</button>
-			  </div>
-			)}
-		  </main>
-		  <footer className="absolute bottom-0 w-full text-center py-4">
-			<a
-			  href="https://github.com"
-			  target="_blank"
-			  rel="noopener noreferrer"
-			>
-			  <div className="text-sm text-gray-500">
-				©2023 Fluent. All rights reserved.
-			  </div>
-			</a>
-		  </footer>
+					<div className="text-sm text-gray-500">
+						©2023 Fluent. All rights reserved.
+					</div>
+				</a>
+			</footer>
 		</div>
-	  );
+	);
 }
 
-	  export default Game
+export default Game
