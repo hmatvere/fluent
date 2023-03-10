@@ -287,6 +287,9 @@ const Game = () => {
 				//console.log(generatedText); // This will log the generated text to the console
 				const test = await generateText("what does "+currentWord_+" mean?")
 				console.log("test:",test)
+				const wordDefinitionDiv = document.getElementById("word-definition");
+				wordDefinitionDiv.innerHTML = test.content;
+				
 				setCurrentWord(currentWord_);
 				playText(currentWord_, languageCode);
 			});
