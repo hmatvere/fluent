@@ -1,3 +1,8 @@
+/*
+Author: Henri Matvere
+*/
+
+
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import "regenerator-runtime/runtime"
@@ -43,14 +48,11 @@ const LANG_ = {
 	'Gujarati': 'gu-IN',
 };
 
-const HindiWords = ['नमस्ते', 'अलविदा', 'नमस्ते आ']
-
+//const HindiWords = ['नमस्ते', 'अलविदा', 'नमस्ते आ']
 
 //नमस्ते
 
 const Game = () => {
-
-	
 
 	// Retrieve langCode from localStorage on page load
 	//const storedLangCode = localStorage.getItem('langCode');
@@ -58,7 +60,10 @@ const Game = () => {
 	const langCode = storedLangCode || 'hi-IN'; // set default to 'en' if no value is stored
 
 	
-	
+
+	if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
+		return <span>Browser doesn't support speech recognition.</span>;
+	}
 
 	const router = useRouter();
 	//const lang = router.query.lang as string; // Get the value of the lang query parameter
@@ -83,8 +88,6 @@ const Game = () => {
 	const audioRef = useRef<HTMLAudioElement>(null);
 	const [isFinishedSpeaking, setIsFinishedSpeaking] = useState(false);
 	const [isModalOpen, setIsModalOpen] = useState(true);
-
-
 
 
 	const commands = Object.keys(LANGUAGE_MAP).map(language => ({
@@ -128,7 +131,6 @@ const Game = () => {
 				//console.log(response.data);
 				audio.play();
 
-
 				// Disable audio listener until TTS finishes playing
 				// Resume listening after the audio finishes playing
 				//audio.addEventListener('ended', () => {
@@ -140,8 +142,6 @@ const Game = () => {
 				console.error(error);
 			});
 	};
-
-
 
 
 
@@ -179,77 +179,38 @@ const Game = () => {
 		console.log('Received a translation request!');
 		const response = await axios.get('http://localhost:5000/api/translate', { params: { word } });
 		const translation = response.data.translation;
-		console.log(translation);
+		console.log("translation:",response);
 		//const response = await axios.get('/translate', { params: { word } });
 		return response.data.translation;
 		//return response.data;
 	}
 
-	async function fetchAndAppendImage(prompt: string) {
-		console.log("prompt:", prompt);
-		const response = await axios.get('http://localhost:5000/api/image', { params: { prompt } });;
-		const imageUrl = response.data.imageUrl;
-		
-		const image = new Image();
-		image.src = imageUrl;
-		const container = document.getElementById('image-container');
-		container.appendChild(image);
-	}
-
-
 
 
 	//generate definition for word, also if able to use it to generate gujarati words
-	// async function generateText(prompt: string, length: number) {
-	// 	const response = await axios.post('http://localhost:5000/api/generate-text', { prompt, length });
-	// 	return response.data.text;
-	//   }
-
 	async function generateText(prompt: string) {
 		const response = await axios.get('http://localhost:5000/api/generate-text', {params : {prompt}});
 		return response.data.text;
 	}
 
-
-	//async function run() {
-	//	const text = await generateText("hello");
-	//	console.log(text);
-	//}
-	  
-	//run();
-	
-	
-
-	// async function generateTextRequest(content: any) {
-	// 	try {
-	// 	  const response = await fetch('http://localhost:5000/api/generate-text', {
-	// 		method: 'POST',
-	// 		headers: {
-	// 		  'Content-Type': 'application/json'
-	// 		},
-	// 		body: JSON.stringify({ content })
-	// 	  });
-	  
-	// 	  if (!response.ok) {
-	// 		throw new Error('Failed to generate text');
-	// 	  }
-	  
-	// 	  const data = await response.json();
-	// 	  return data.text;
-	// 	} catch (error) {
-	// 	  console.error(error);
-	// 	  throw error;
-	// 	}
-	//   }
-	// 	  generateTextRequest('Hello world')
-	//   .then(text => console.log(text))
-	//   .catch(error => console.error(error));
+	//generate image based on prompt.
+	async function generateImage(prompt: string) {
+		try {
+			const response = await axios.get('http://localhost:5000/api/generate-image', {params: { prompt }});
+			console.log("3",response.data);
+			const imgURL_ = response.data.imageUrl;
+			console.log("Imageurl:",imgURL_)
+			return imgURL_;
+		  } catch (error) {
+			console.error(error);
+		  }
+	}
 	
 
-	//dictionaries for each language
+	//dictionaries for each language (nepali and hindi are the same)
 	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
-	const nepaliLink = 'https://raw.githubusercontent.com/bdrillard/english-nepali-dictionary/master/English-Nepali%20Dictionary.csv';
-	const gujaratiLink = 'https://raw.githubusercontent.com/bdrillard/english-gujarati-dictionary/master/English-Gujarati%20Dictionary.csv';
+	const nepaliLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
+	const gujaratiLink = 'https://raw.githubusercontent.com/hmatvere/gujarati-to-english-1000-words/main/gujarati-to-english-1000-words.csv';
 
 	//pick a language link to use
 	let dictionaryLink = '';
@@ -281,22 +242,44 @@ const Game = () => {
 				const translation = await getTranslatedWord(currentWord_);
 				setTranslatedWord(translation);
 				console.log(translation);
-				//fetchAndAppendImage(translation);
-				//test
-				//const generatedText = await generateText('hello', 100);
 				//console.log(generatedText); // This will log the generated text to the console
-				const test = await generateText("what does "+currentWord_+" mean?")
-				console.log("test:",test)
-				const wordDefinitionDiv = document.getElementById("word-definition");
-				wordDefinitionDiv.innerHTML = test.content;
-				
 				setCurrentWord(currentWord_);
 				playText(currentWord_, languageCode);
+				const definition = await generateText("what does "+currentWord_+" mean?")
+				console.log("test:",definition)
+				const wordDefinitionDiv = document.getElementById("word-definition");
+				wordDefinitionDiv.innerHTML = definition.content;
+
+			
+				//generate image and display it
+				// console.log("1");
+				// try {
+				// 	console.log("2");
+				// 	const imageUrl = await generateImage(translation);
+				// 	console.log('Generated image URL:', imageUrl);
+				// 	const imageContainer = document.getElementById('image-container');
+				// 	const imgElement = document.createElement('img');
+				// 	imgElement.src = imageUrl;
+				// 	const existingImgElement = imageContainer.querySelector('img');
+				// 	if (existingImgElement) {
+				// 	  imageContainer.replaceChild(imgElement, existingImgElement);
+				// 	} else {
+				// 	  imageContainer.appendChild(imgElement);
+				// 	}
+				//   } catch (error) {
+				// 	console.log(`Error generating image: ${error}`);
+				//   }
+				 
+				
+		
 			});
 		} catch (error) {
 			console.log(error);
 		}
 	}
+
+
+
 
 	const guessWord = () => {
 		console.log(currentWord, "<-currentword")
@@ -326,14 +309,21 @@ const Game = () => {
 
 
 
+
 	const startGuessing = async () => {
+		const imageContainer = document.getElementById('image-container');
+  const imgElement = imageContainer.querySelector('img');
+  if (imgElement) {
+    imageContainer.removeChild(imgElement);
+  }
+  setGuess('');
 		setGuess('');
+		//handleReset();
 		setIsGuessing(true)
 		// setTimeout(() => {
 		//   setGuess('');
 		//}, 10000000);
 	}
-
 
 
 	return (

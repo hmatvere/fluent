@@ -33,9 +33,6 @@ app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
 
-
-
-
 //const fs = require('fs');
 //const util = require('util');
 
@@ -48,7 +45,6 @@ const client = new textToSpeech.TextToSpeechClient();
 
 //environment variable for the application default credentials
 process.env.GOOGLE_APPLICATION_CREDENTIALS = "C:\\Users\\henry\\AppData\\Roaming\\gcloud\\application_default_credentials.json";
-
 
 class AudioController {
   static async apiGetPronounce(req, res, next) {
@@ -75,10 +71,8 @@ class AudioController {
 }
 
 
-
 app.get('/api/translate', async (req, res) => {
   const { word } = req.query;
-
   try {
     // Translates the word to English
     const [translation] = await translate.translate(word, 'en');
@@ -100,8 +94,6 @@ module.exports = AudioController;
 organisationID = 'org-0pAscKh9WBhtgFqt2ouoeZdV';
 
 
-
-
 //image generation
 const axios = require('axios');
 const fs = require('fs');
@@ -116,24 +108,6 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-
-
-
-// app.post('/api/image', async (req, res) => {
-//   try {
-//     const prompt = req.body.prompt;
-//     const response = await openaiClient.createImage({
-//       prompt: prompt,
-//       n: 1,
-//       size: "1024x1024",
-//     });
-//     const imageUrl = response.data.data[0].url;
-//     res.send({ imageUrl: imageUrl });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Error generating image');
-//   }
-// });
 
 app.get('/api/translate', async (req, res) => {
   const { word } = req.query;
@@ -150,6 +124,7 @@ app.get('/api/translate', async (req, res) => {
   }
 });
 
+
 app.get('/api/generate-text', async (req, res) => {
   //const { prompt, length } = req.body;
   const { prompt } = req.query;
@@ -161,17 +136,25 @@ app.get('/api/generate-text', async (req, res) => {
   res.send({ text });
 });
 
-//  async function run() {
-//    const completion = await openai.createChatCompletion({
-//      model: "gpt-3.5-turbo",
-//      messages: [{role: "user", content: "Hello world"}],
-//   });
-//    console.log(completion.data.choices[0].text);
 
- //}
- //run().catch(error => console.error(error));
-
-
+app.get('/api/generate-image', async (req,res) => {
+  const { prompt } = req.query;
+  try {
+    const response = await openai.createImage({
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+    const imageUrl = response.data.data[0].url;
+    console.log(prompt);
+    console.log('Generated image URL:', imageUrl);
+    res.send({ imageUrl }); // Send the image URL back to the client
+  } catch (e) {
+    console.error(`Failed to generate image from prompt "${prompt}": ${e}`);
+    res.sendStatus(500); // Send an error status code back to the client
+    return null;
+  }
+});
 
 
 
