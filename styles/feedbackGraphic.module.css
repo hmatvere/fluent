@@ -1,0 +1,17 @@
+.feedbackGraphic {
+    width: 30px;
+    height: 30px;
+    background-color: #1da1f2;
+    border-radius: 50%;
+    animation: oscillate 1s infinite;
+  }
+  
+  @keyframes oscillate {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.5);
+    }
+  }

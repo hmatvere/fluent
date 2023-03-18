@@ -8,6 +8,17 @@ const cors = require('cors');
 const { Configuration, OpenAIApi } = require("openai");
 
 
+
+//firebase--- 
+var admin = require("firebase-admin");
+
+var serviceAccount = require("subtle-seat-368211-firebase-adminsdk-b2ft1-f94924ba18.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+//---
+
 app.use(cors());
 //to allow request from client side 
 app.use((req, res, next) => {
@@ -143,7 +154,7 @@ app.get('/api/generate-image', async (req,res) => {
     const response = await openai.createImage({
       prompt: prompt,
       n: 1,
-      size: "1024x1024",
+      size: "512x512",
     });
     const imageUrl = response.data.data[0].url;
     console.log(prompt);

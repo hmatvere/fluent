@@ -9,6 +9,7 @@ import "regenerator-runtime/runtime"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useRouter } from 'next/router';
 import ReactModal from 'react-modal';
+import styles from '../styles/FeedbackGraphic.module.css';
 //import fetch from 'node-fetch';
 //import { FileReader } from 'file-reader'
 //import Config from 'react-native-config';
@@ -24,7 +25,6 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import HindiReadWords from "../components/HindiReadWords";
 import Services from "../components/Services";
-import styles from "../styles/Home.module.css";
 import axios from 'axios';
 //import csv from 'csv-parser';
 import parse from 'csv-parse';
@@ -86,26 +86,40 @@ const Game = () => {
 	const [translatedWord, setTranslatedWord] = useState("");
 	const [translateError, setTranslateError] = useState(null);
 	const audioRef = useRef<HTMLAudioElement>(null);
-	const [isFinishedSpeaking, setIsFinishedSpeaking] = useState(false);
-	const [isModalOpen, setIsModalOpen] = useState(true);
+	const [isSpeaking, setIsSpeaking] = useState(false);
+	const [currentTranscript, setCurrentTranscript] = useState('');
 
+	function processTranscript() {
+		setGuess(currentTranscript);
+		setIsSpeaking(false);
+		setCurrentTranscript('');
+	  }
 
-	const commands = Object.keys(LANGUAGE_MAP).map(language => ({
+	  const languageCommands = Object.keys(LANGUAGE_MAP).map((language) => ({
 		command: language,
 		callback: () => {
-			setLanguage(LANGUAGE_MAP[language])
-			SpeechRecognition.startListening({
-				continuous: true,
-				language: LANGUAGE_MAP[language]
-			})
+		  setLanguage(LANGUAGE_MAP[language]);
+		  SpeechRecognition.startListening({
+			continuous: true,
+			language: LANGUAGE_MAP[language],
+		  });
 		},
-		matchInterim: true
-	}))
+		matchInterim: true,
+	  }));
+	  
+	  const allCommands = [
+		...languageCommands,
+		{
+		  command: "*",
+		  callback: (transcript) => {
+			handleGuess(transcript);
+		  },
+		},
+	  ];
+	  
+	  useSpeechRecognition({ commands: allCommands });
 
-
-	const { transcript, listen } = useSpeechRecognition({ commands })
-
-	const { resetTranscript } = useSpeechRecognition()
+	  const { transcript, listen, resetTranscript } = useSpeechRecognition({ commands: allCommands });
 
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
@@ -147,6 +161,11 @@ const Game = () => {
 
 	useEffect(() => {
 		setGuess(transcript);
+		if (transcript) {
+			setIsSpeaking(true);
+		  } else {
+			setIsSpeaking(false);
+		  }
 	}, [transcript]);
 
 	const handleReset = () => {
@@ -173,6 +192,14 @@ const Game = () => {
 		//setWords(HindiWords)
 		fetchRandomWord();
 	}
+
+	const handleGuess = (transcript) => {
+		if (transcript.trim() !== '') {
+		  setGuess((prevGuess) => [...prevGuess, transcript.trim()]);
+		  setCurrentTranscript('');
+		  resetTranscript();
+		}
+	  };
 
 
 	async function getTranslatedWord(word: string) {
@@ -252,23 +279,23 @@ const Game = () => {
 
 			
 				//generate image and display it
-				// console.log("1");
-				// try {
-				// 	console.log("2");
-				// 	const imageUrl = await generateImage(translation);
-				// 	console.log('Generated image URL:', imageUrl);
-				// 	const imageContainer = document.getElementById('image-container');
-				// 	const imgElement = document.createElement('img');
-				// 	imgElement.src = imageUrl;
-				// 	const existingImgElement = imageContainer.querySelector('img');
-				// 	if (existingImgElement) {
-				// 	  imageContainer.replaceChild(imgElement, existingImgElement);
-				// 	} else {
-				// 	  imageContainer.appendChild(imgElement);
-				// 	}
-				//   } catch (error) {
-				// 	console.log(`Error generating image: ${error}`);
-				//   }
+				console.log("1");
+				try {
+					console.log("2");
+					const imageUrl = await generateImage(translation);
+					console.log('Generated image URL:', imageUrl);
+					const imageContainer = document.getElementById('image-container');
+					const imgElement = document.createElement('img');
+					imgElement.src = imageUrl;
+					const existingImgElement = imageContainer.querySelector('img');
+					if (existingImgElement) {
+					  imageContainer.replaceChild(imgElement, existingImgElement);
+					} else {
+					  imageContainer.appendChild(imgElement);
+					}
+				  } catch (error) {
+					console.log(`Error generating image: ${error}`);
+				  }
 				 
 				
 		
@@ -311,11 +338,11 @@ const Game = () => {
 
 
 	const startGuessing = async () => {
-		const imageContainer = document.getElementById('image-container');
-  const imgElement = imageContainer.querySelector('img');
-  if (imgElement) {
-    imageContainer.removeChild(imgElement);
-  }
+		//const imageContainer = document.getElementById('image-container');
+  		//const imgElement = imageContainer.querySelector('img');
+  		//if (imgElement) {
+    	//imageContainer.removeChild(imgElement);
+  		//}
   setGuess('');
 		setGuess('');
 		//handleReset();
@@ -358,6 +385,7 @@ const Game = () => {
 								<div>
 									{guess ? (
 										<>
+										<div className={isSpeaking ? styles.feedbackGraphic : ''}></div>
 											<span>{guess}</span>
 										</>
 									) : (
@@ -371,6 +399,7 @@ const Game = () => {
 							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
 							onClick={() => {
 								handleReset();
+								handleGuess(currentTranscript);
 								guessWord();
 							}}
 						>
@@ -390,9 +419,7 @@ const Game = () => {
 			</main>
 			<footer className="absolute bottom-0 w-full text-center py-4">
 				<a
-					href="https://github.com"
-					target="_blank"
-					rel="noopener noreferrer"
+					
 				>
 					<div className="text-sm text-gray-500">
 						©2023 Fluent. All rights reserved.
