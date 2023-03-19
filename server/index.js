@@ -12,7 +12,7 @@ const { Configuration, OpenAIApi } = require("openai");
 //firebase--- 
 var admin = require("firebase-admin");
 
-var serviceAccount = require("subtle-seat-368211-firebase-adminsdk-b2ft1-f94924ba18.json");
+var serviceAccount = require("./subtle-seat-368211-firebase-adminsdk-b2ft1-f94924ba18.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

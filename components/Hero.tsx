@@ -21,7 +21,7 @@ function Hero({}: Props) {
     <div className='h-screen flex flex-col space-y-8 items-center justify-center text-center overflow-hidden'>
         <BackgroundCircles />
         <Image
-            src='/../public/fluent.png'
+            src='/fluent.png'
             alt='Fluent Logo'
             width={300}
             height={300}

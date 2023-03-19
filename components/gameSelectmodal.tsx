@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactModal from 'react-modal';
-import LANGUAGE_MAP from "../pages/pronounciation-game";
+import { LANGUAGE_MAP } from "../pages/pronounciation-game";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 

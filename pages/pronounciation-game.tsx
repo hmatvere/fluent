@@ -2,7 +2,6 @@
 Author: Henri Matvere
 */
 
-
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import "regenerator-runtime/runtime"
@@ -23,31 +22,38 @@ import ISynthesizeSpeechRequest from '@google-cloud/text-to-speech';
 //import * as FileSaver from 'file-saver';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import HindiReadWords from "../components/HindiReadWords";
 import Services from "../components/Services";
 import axios from 'axios';
 //import csv from 'csv-parser';
 import parse from 'csv-parse';
 //import parse from 'csv-parse/lib/es5';
-import * as TextEncoder from 'text-encoding';
+//import * as TextEncoder from 'text-encoding';
 //import * as parse from 'csv-parse/lib/sync';
 import { debug } from "util";
 //import Translate from '@google-cloud/translate';
 //import { Translate } from '@google-cloud/translate';
 import { Translate } from '@google-cloud/translate/build/src/v2';
 
-const LANGUAGE_MAP = {
-	'हिन्दी': 'hi-IN', //हिन्दी
-	'ne-IP': 'ne-NP', //नेपाली भाषा
-	'ગુજરાતી': 'gu-IN' //ગુજરાતી
-}
+//const LANGUAGE_MAP = {
+//	'हिन्दी': 'hi-IN', //हिन्दी
+//	'ne-IP': 'ne-NP', //नेपाली भाषा
+//	'ગુજરાતી': 'gu-IN' //ગુજરાતી
+//}
+
+const LANGUAGE_MAP: {[key: string]: string} = {
+	'हिन्दी': 'hi-IN',
+	'ne-IP': 'ne-NP',
+	'ગુજરાતી': 'gu-IN'
+  };
+
+
 
 const LANG_ = {
 	'Hindi': 'hi-IN',
 	'Nepali': 'ne-NP',
 	'Gujarati': 'gu-IN',
 };
-
+export { LANGUAGE_MAP };
 //const HindiWords = ['नमस्ते', 'अलविदा', 'नमस्ते आ']
 
 //नमस्ते
@@ -76,9 +82,10 @@ const Game = () => {
 	//ideally use local storage for this but for now this will work as the user should not really need to be refreshing
 	//the page anyway 
 	const [language, setLanguage] = useState(languageCode || 'hi-IN')
-	const [guess, setGuess] = useState('')
-	const [words, setWords] = useState([])
-	const [currentWord, setCurrentWord] = useState(null)
+	//const [guess, setGuess] = useState('') from before I used useState<string[]>([]);
+	const [guess, setGuess] = useState<string[]>([]);
+	const [words, setWords] = useState<string[]>([]);
+	const [currentWord, setCurrentWord] = useState<string | null>(null)
 	const [points, setPoints] = useState(0)
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [isGuessing, setIsGuessing] = useState(false)
@@ -90,9 +97,9 @@ const Game = () => {
 	const [currentTranscript, setCurrentTranscript] = useState('');
 
 	function processTranscript() {
-		setGuess(currentTranscript);
-		setIsSpeaking(false);
-		setCurrentTranscript('');
+		 setGuess((prevGuess) => [...prevGuess, currentTranscript]);
+    	 setIsSpeaking(false);
+    	 setCurrentTranscript('');
 	  }
 
 	  const languageCommands = Object.keys(LANGUAGE_MAP).map((language) => ({
@@ -111,7 +118,7 @@ const Game = () => {
 		...languageCommands,
 		{
 		  command: "*",
-		  callback: (transcript) => {
+		  callback: (transcript: string) => {
 			handleGuess(transcript);
 		  },
 		},
@@ -119,7 +126,7 @@ const Game = () => {
 	  
 	  useSpeechRecognition({ commands: allCommands });
 
-	  const { transcript, listen, resetTranscript } = useSpeechRecognition({ commands: allCommands });
+	  const { transcript, resetTranscript } = useSpeechRecognition({ commands: allCommands });
 
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
@@ -157,15 +164,22 @@ const Game = () => {
 			});
 	};
 
-
+	//useEffect(() => {
+	//	setGuess(transcript);
+	//	if (transcript) {
+	//		setIsSpeaking(true);
+	//	  } else {
+	//		setIsSpeaking(false);
+	//	  }
+	//}, [transcript]);
 
 	useEffect(() => {
-		setGuess(transcript);
+		setGuess((prevGuess) => [...prevGuess, transcript]);
 		if (transcript) {
 			setIsSpeaking(true);
-		  } else {
+		} else {
 			setIsSpeaking(false);
-		  }
+		}
 	}, [transcript]);
 
 	const handleReset = () => {
@@ -185,7 +199,7 @@ const Game = () => {
 	}, [words])
 
 	const startGame = () => {
-		setGuess('');
+		setGuess([]);
 		handleReset();
 		setIsPlaying(true)
 		//this below is used for testing 
@@ -193,7 +207,7 @@ const Game = () => {
 		fetchRandomWord();
 	}
 
-	const handleGuess = (transcript) => {
+	const handleGuess = (transcript: string) => {
 		if (transcript.trim() !== '') {
 		  setGuess((prevGuess) => [...prevGuess, transcript.trim()]);
 		  setCurrentTranscript('');
@@ -211,8 +225,6 @@ const Game = () => {
 		return response.data.translation;
 		//return response.data;
 	}
-
-
 
 	//generate definition for word, also if able to use it to generate gujarati words
 	async function generateText(prompt: string) {
@@ -233,7 +245,6 @@ const Game = () => {
 		  }
 	}
 	
-
 	//dictionaries for each language (nepali and hindi are the same)
 	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
 	const nepaliLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
@@ -275,7 +286,9 @@ const Game = () => {
 				const definition = await generateText("what does "+currentWord_+" mean?")
 				console.log("test:",definition)
 				const wordDefinitionDiv = document.getElementById("word-definition");
-				wordDefinitionDiv.innerHTML = definition.content;
+				if (wordDefinitionDiv !== null) {
+  					wordDefinitionDiv.innerHTML = definition.content;
+				}	
 
 			
 				//generate image and display it
@@ -285,14 +298,16 @@ const Game = () => {
 					const imageUrl = await generateImage(translation);
 					console.log('Generated image URL:', imageUrl);
 					const imageContainer = document.getElementById('image-container');
-					const imgElement = document.createElement('img');
-					imgElement.src = imageUrl;
-					const existingImgElement = imageContainer.querySelector('img');
-					if (existingImgElement) {
-					  imageContainer.replaceChild(imgElement, existingImgElement);
-					} else {
-					  imageContainer.appendChild(imgElement);
-					}
+					if (imageContainer !== null) {
+						const imgElement = document.createElement('img');
+						imgElement.src = imageUrl;
+						const existingImgElement = imageContainer.querySelector('img');
+						if (existingImgElement) {
+						  imageContainer.replaceChild(imgElement, existingImgElement);
+						} else {
+						  imageContainer.appendChild(imgElement);
+						}
+					  }
 				  } catch (error) {
 					console.log(`Error generating image: ${error}`);
 				  }
@@ -305,24 +320,22 @@ const Game = () => {
 		}
 	}
 
-
-
-
 	const guessWord = () => {
 		console.log(currentWord, "<-currentword")
 		if (currentWord) {
-			console.log("word we spoke: " + guess.toLowerCase())
-			console.log(guess.toLowerCase(), " : ", currentWord.toLowerCase());
-			if (guess.toLowerCase() === currentWord.toLowerCase()) {
+			const lastGuess = guess[guess.length - 1];
+			console.log("word we spoke: " + lastGuess.toLowerCase())
+			console.log(lastGuess.toLowerCase(), " : ", currentWord.toLowerCase());
+			if (lastGuess.toLowerCase() === currentWord.toLowerCase()) {
 				setPoints(points + 1)
 				console.log("1")
 				console.log(points)
-				setGuess('');
+				setGuess([]);
 			}
-			setGuess('');
+			setGuess([]);
 			//resetTranscript()
 			console.log("transcript:", transcript)
-			setGuess('');
+			setGuess([]);
 			setIsGuessing(false)
 			const currentIndex = words.indexOf(currentWord)
 			//setCurrentWord(words[currentIndex + 1])
@@ -333,18 +346,14 @@ const Game = () => {
 		}
 	}
 
-
-
-
-
 	const startGuessing = async () => {
 		//const imageContainer = document.getElementById('image-container');
   		//const imgElement = imageContainer.querySelector('img');
   		//if (imgElement) {
     	//imageContainer.removeChild(imgElement);
   		//}
-  setGuess('');
-		setGuess('');
+  setGuess([]);
+		setGuess([]);
 		//handleReset();
 		setIsGuessing(true)
 		// setTimeout(() => {
