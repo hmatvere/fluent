@@ -132,7 +132,12 @@ const Game = () => {
 	function playText(text: string, langCode: string) {
 		//SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
-		axios.get('http://localhost:5000/api/index/pronounce', {
+		axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce', {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+			  },
 			params: {
 				text: text,
 				langCode: langCode
@@ -218,7 +223,14 @@ const Game = () => {
 
 	async function getTranslatedWord(word: string) {
 		console.log('Received a translation request!');
-		const response = await axios.get('http://localhost:5000/api/index/translate', { params: { word } });
+		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translate', 
+		{ 
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+			  },
+			params: { word } });
 		const translation = response.data.translation;
 		console.log("translation:",response);
 		//const response = await axios.get('/translate', { params: { word } });
@@ -228,14 +240,28 @@ const Game = () => {
 
 	//generate definition for word, also if able to use it to generate gujarati words
 	async function generateText(prompt: string) {
-		const response = await axios.get('http://localhost:5000/api/index/generate-text', {params : {prompt}});
+		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-text', 
+		{
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+			  },
+			params : {prompt}});
 		return response.data.text;
 	}
 
 	//generate image based on prompt.
 	async function generateImage(prompt: string) {
 		try {
-			const response = await axios.get('http://localhost:5000/api/index/generate-image', {params: { prompt }});
+			const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image', 
+			{
+				headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+			  },
+				params: { prompt }});
 			console.log("3",response.data);
 			const imgURL_ = response.data.imageUrl;
 			console.log("Imageurl:",imgURL_)
