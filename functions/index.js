@@ -37,10 +37,11 @@ admin.initializeApp({
 const target = 'en';
 
 
-//const translate = new Translate({
-//  projectId: 'subtle-seat-368211',
-//  keyFilename: 'C:\\Users\\henry\\AppData\\Roaming\\gcloud\\application_default_credentials.json'
-//});
+
+const translate = new Translate({
+  projectId: 'subtle-seat-368211',
+  keyFilename: 'application_default_credentials.json'
+});
 
 // Creates a client side react runs on 3000 so do not use 3000
 //const port = process.env.PORT || 5000;
@@ -51,9 +52,8 @@ const target = 'en';
 // client
 const client = new textToSpeech.TextToSpeechClient();
 
-
 //environment variable for the application default credentials
-//process.env.GOOGLE_APPLICATION_CREDENTIALS = "C:\\Users\\henry\\AppData\\Roaming\\gcloud\\application_default_credentials.json";
+process.env.GOOGLE_APPLICATION_CREDENTIALS = "application_default_credentials.json";
 
 class AudioController {
   static async apiGetPronounce(req, res, next) {
@@ -116,6 +116,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 app.get('/translate', async (req, res) => {
+  console.log("logging")
       // Set CORS headers for preflight requests
 if (req.method === 'OPTIONS') {
   // Allows GET requests from any origin with the Content-Type header
@@ -146,6 +147,8 @@ if (req.method === 'OPTIONS') {
   res.status(500).send({ error: `Failed to translate ${word} to English` });
   }
 });
+
+//exports.translate = functions.https.onRequest(putsomethinghere);
 
 
 
@@ -193,6 +196,7 @@ if (req.method === 'OPTIONS') {
   res.send({ text });
 });
 
+exports.generateText = functions.https.onRequest(app);
 
 app.get('/generate-image', cors(corsOptions),async (req,res) => {
 
@@ -228,6 +232,7 @@ if (req.method === 'OPTIONS') {
   }
 });
 
+//exports.generateImage = functions.https.onRequest(translateApp);
 
 app.get('/', (req,res) => {
   res.send('asdjkl;fghbsdfil;hkghjkldfgbm,.bdlKfghjuiklsdrwvg idf,.gvuk');
