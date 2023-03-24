@@ -56,24 +56,10 @@ const client = new textToSpeech.TextToSpeechClient();
 process.env.GOOGLE_APPLICATION_CREDENTIALS = "application_default_credentials.json";
 
 class AudioController {
+  
   static async apiGetPronounce(req, res, next) {
+  
     try {
-
-       // Set CORS headers for preflight requests
-  if (req.method === 'OPTIONS') {
-    // Allows GET requests from any origin with the Content-Type header
-    // and caches preflight response for 3600s
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.set('Access-Control-Max-Age', '3600');
-    res.status(204).send('');
-  } else {
-    // Set CORS headers for main requests
-    res.set('Access-Control-Allow-Origin', '*');
-    // other code
-  }
-
       const request = {
         input: { text: req.query.text },
         voice: { languageCode: req.query.langCode, ssmlGender: 'NEUTRAL' },
@@ -95,9 +81,17 @@ class AudioController {
   }
 }
 
+exports.pronounce = functions.https.onRequest((req, res) => {
+  // Wrap your existing route handler with the cors() middleware
+  cors(corsOptions)(req, res, async () => {
+    // Call the apiGetPronounce method
+    AudioController.apiGetPronounce(req, res);
+  });
+});
+
 //define endpoint for client to access
 //app.get('/api/pronounce', corsMiddleware,AudioController.apiGetPronounce);
-exports.pronounce = functions.https.onRequest(AudioController.apiGetPronounce);
+//exports.pronounce = functions.https.onRequest(AudioController.apiGetPronounce);
 
 organisationID = 'org-0pAscKh9WBhtgFqt2ouoeZdV';
 
