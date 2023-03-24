@@ -63,7 +63,7 @@ const Game = () => {
 	// Retrieve langCode from localStorage on page load
 	//const storedLangCode = localStorage.getItem('langCode');
 	const storedLangCode = typeof localStorage !== 'undefined' ? localStorage.getItem('langCode') : undefined;
-	const langCode = storedLangCode || 'hi-IN'; // set default to 'en' if no value is stored
+	const langCode = storedLangCode || 'hi-IN'; // set default to 'hi-IN' if no value is stored
 
 	
 
@@ -95,6 +95,7 @@ const Game = () => {
 	const audioRef = useRef<HTMLAudioElement>(null);
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const [currentTranscript, setCurrentTranscript] = useState('');
+	const [listening, setListening] = useState(false);
 
 	function processTranscript() {
 		 setGuess((prevGuess) => [...prevGuess, currentTranscript]);
@@ -102,35 +103,79 @@ const Game = () => {
     	 setCurrentTranscript('');
 	  }
 
-	  const languageCommands = Object.keys(LANGUAGE_MAP).map((language) => ({
-		command: language,
-		callback: () => {
-		  setLanguage(LANGUAGE_MAP[language]);
-		  SpeechRecognition.startListening({
-			continuous: true,
-			language: LANGUAGE_MAP[language],
-		  });
-		},
-		matchInterim: true,
-	  }));
-	  
-	  const allCommands = [
-		...languageCommands,
-		{
-		  command: "*",
-		  callback: (transcript: string) => {
-			handleGuess(transcript);
-		  },
-		},
-	  ];
-	  
-	  useSpeechRecognition({ commands: allCommands });
+	const { transcript } = useSpeechRecognition()
+	const { resetTranscript } = useSpeechRecognition()
 
-	  const { transcript, resetTranscript } = useSpeechRecognition({ commands: allCommands });
+	  useEffect(() => {
+		const startListening = async () => {
+		  try {
+			await SpeechRecognition.startListening({
+			  continuous: true,
+			  language: langCode,
+			});
+		  } catch (error) {
+			console.error('Error starting speech recognition:', error);
+		  }
+		};
+	
+		startListening();
+	  }, [languageCode]);
+	
+	  useEffect(() => {
+		console.log('Current transcript:', transcript);
+	  }, [transcript]);
+	  
+	  // Add this function inside your component
+	  const logTranscript = () => {
+		console.log("Current transcript:", transcript);
+	  };
+
+	//   useEffect(() => {
+	// 	if (transcript) {
+	// 	  setListening(true);
+	// 	} else {
+	// 	  setListening(false);
+	// 	}
+	//   }, [transcript]);
+	  
+	  // Add a useEffect hook to call logTranscript whenever the transcript value changes
+	  useEffect(() => {
+		logTranscript();
+	  }, [transcript]);
+
+
+	  useEffect(() => {
+		// Log the current transcript
+		console.log("Current transcript:", transcript);
+	  
+		if (transcript) {
+		  // Set isSpeaking to true if there is a transcript
+		  setIsSpeaking(true);
+	  
+		  // Update the guess array with the new transcript
+		  setGuess((prevGuess) => [...prevGuess, transcript]);
+	  
+		  // Reset the transcript
+		  resetTranscript();
+		} else {
+		  // Set isSpeaking to false if there is no transcript
+		  setIsSpeaking(false);
+		}
+	  }, [transcript]);
+
+
+	const handleReset = () => {
+		resetTranscript();
+	};
+
+	useEffect(() => {
+		console.log('Listening:', listening);
+	  }, [listening]);
 
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
-		//SpeechRecognition.abortListening();
+		//stop listening so that the output audio is not picked up in the input
+		SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
 		axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce', {
 			headers: {
@@ -157,11 +202,10 @@ const Game = () => {
 				//console.log(response.data);
 				audio.play();
 
-				// Disable audio listener until TTS finishes playing
-				// Resume listening after the audio finishes playing
-				//audio.addEventListener('ended', () => {
-				//SpeechRecognition.startListening({ continuous: true, language: language });
-				//});
+				// resume listening after the audio finishes playing
+				audio.addEventListener('ended', () => {
+					SpeechRecognition.startListening({ continuous: true, language: language });
+				});
 
 			})
 			.catch(error => {
@@ -169,34 +213,6 @@ const Game = () => {
 			});
 	};
 
-	//useEffect(() => {
-	//	setGuess(transcript);
-	//	if (transcript) {
-	//		setIsSpeaking(true);
-	//	  } else {
-	//		setIsSpeaking(false);
-	//	  }
-	//}, [transcript]);
-
-	useEffect(() => {
-		setGuess((prevGuess) => [...prevGuess, transcript]);
-		if (transcript) {
-			setIsSpeaking(true);
-		} else {
-			setIsSpeaking(false);
-		}
-	}, [transcript]);
-
-	const handleReset = () => {
-		resetTranscript();
-	};
-
-	useEffect(() => {
-		SpeechRecognition.startListening({
-			continuous: true,
-			language: languageCode
-		})
-	}, [])
 
 	useEffect(() => {
 		if (words.length === 0) return
@@ -263,6 +279,8 @@ const Game = () => {
 			  },
 				params: { prompt }});
 			console.log("3",response.data);
+			console.log("4",transcript);
+			console.log("5");
 			const imgURL_ = response.data.imageUrl;
 			console.log("Imageurl:",imgURL_)
 			return imgURL_;
@@ -420,7 +438,6 @@ const Game = () => {
 								<div>
 									{guess ? (
 										<>
-										
 											<span>{guess}</span>
 										</>
 									) : (
