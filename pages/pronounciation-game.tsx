@@ -26,19 +26,12 @@ import Services from "../components/Services";
 import axios from 'axios';
 //import csv from 'csv-parser';
 import parse from 'csv-parse';
-//import parse from 'csv-parse/lib/es5';
-//import * as TextEncoder from 'text-encoding';
-//import * as parse from 'csv-parse/lib/sync';
 import { debug } from "util";
 //import Translate from '@google-cloud/translate';
 //import { Translate } from '@google-cloud/translate';
 import { Translate } from '@google-cloud/translate/build/src/v2';
+import { levels } from '../lib/levels';
 
-//const LANGUAGE_MAP = {
-//	'हिन्दी': 'hi-IN', //हिन्दी
-//	'ne-IP': 'ne-NP', //नेपाली भाषा
-//	'ગુજરાતી': 'gu-IN' //ગુજરાતી
-//}
 
 const LANGUAGE_MAP: {[key: string]: string} = {
 	'हिन्दी': 'hi-IN',
@@ -46,15 +39,12 @@ const LANGUAGE_MAP: {[key: string]: string} = {
 	'ગુજરાતી': 'gu-IN'
   };
 
-
-
 const LANG_ = {
 	'Hindi': 'hi-IN',
 	'Nepali': 'ne-NP',
 	'Gujarati': 'gu-IN',
 };
 export { LANGUAGE_MAP };
-//const HindiWords = ['नमस्ते', 'अलविदा', 'नमस्ते आ']
 
 //नमस्ते
 
@@ -64,8 +54,6 @@ const Game = () => {
 	//const storedLangCode = localStorage.getItem('langCode');
 	const storedLangCode = typeof localStorage !== 'undefined' ? localStorage.getItem('langCode') : undefined;
 	const langCode = storedLangCode || 'hi-IN'; // set default to 'hi-IN' if no value is stored
-
-	
 
 	if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
 		return <span>Browser doesn't support speech recognition.</span>;
@@ -89,13 +77,13 @@ const Game = () => {
 	const [points, setPoints] = useState(0)
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [isGuessing, setIsGuessing] = useState(false)
-	const [dictionaryWords, setDictionaryWords] = useState([]);
 	const [translatedWord, setTranslatedWord] = useState("");
-	const [translateError, setTranslateError] = useState(null);
-	const audioRef = useRef<HTMLAudioElement>(null);
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const [currentTranscript, setCurrentTranscript] = useState('');
 	const [listening, setListening] = useState(false);
+	const [level, setLevel] = useState(levels[0]);
+	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
+
 
 	function processTranscript() {
 		 setGuess((prevGuess) => [...prevGuess, currentTranscript]);
@@ -129,14 +117,6 @@ const Game = () => {
 	  const logTranscript = () => {
 		console.log("Current transcript:", transcript);
 	  };
-
-	//   useEffect(() => {
-	// 	if (transcript) {
-	// 	  setListening(true);
-	// 	} else {
-	// 	  setListening(false);
-	// 	}
-	//   }, [transcript]);
 	  
 	  // Add a useEffect hook to call logTranscript whenever the transcript value changes
 	  useEffect(() => {
@@ -174,23 +154,23 @@ const Game = () => {
 
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
-		//stop listening so that the output audio is not picked up in the input
 		SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
-		axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce', {
+		axios
+		  .get("https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce", {
 			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-			  },
+			  "Access-Control-Allow-Origin": "*",
+			  "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, PATCH, DELETE",
+			  "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+			},
 			params: {
-				text: text,
-				langCode: langCode
+			  text: text,
+			  langCode: langCode,
 			},
 			responseType: "blob",
-		})
-			.then(response => {
-				const binaryData = response.data;
+		  })
+		  .then((response) => {
+			const binaryData = response.data;
 				const blob = new Blob([binaryData], { type: 'audio/mpeg' });
 				const url = URL.createObjectURL(blob);
 				const audio = new Audio(url);
@@ -206,14 +186,12 @@ const Game = () => {
 				audio.addEventListener('ended', () => {
 					SpeechRecognition.startListening({ continuous: true, language: language });
 				});
-
-			})
-			.catch(error => {
-				console.error(error);
-			});
-	};
-
-
+		  })
+		  .catch((error) => {
+			console.error(error);
+		  });
+	  }
+	
 	useEffect(() => {
 		if (words.length === 0) return
 		if (currentWord === null) setCurrentWord(words[0])
@@ -225,8 +203,24 @@ const Game = () => {
 		setIsPlaying(true)
 		//this below is used for testing 
 		//setWords(HindiWords)
-		fetchRandomWord();
+		fetchRandomWord(level.id);
 	}
+
+
+	const levelUp = () => {
+		// Implement an animation or graphic here for the level transition
+	  
+		// Update the level state
+		const nextLevelIndex = levels.findIndex((l) => l.id === level.id) + 1;
+		if (nextLevelIndex < levels.length) {
+		  setLevel(levels[nextLevelIndex]);
+		  setTargetPoints(levels[nextLevelIndex].wordLength); // Set the target points for the next level
+		} else {
+		  //user is max level, they keep going till they get bored. Do it where a certain number of wrong guesses in a row
+		  //e.g 4 means its game over, and you have to start from scratch
+		}
+	  };
+
 
 	const handleGuess = (transcript: string) => {
 		if (transcript.trim() !== '') {
@@ -236,11 +230,11 @@ const Game = () => {
 		}
 	  };
 
-
 	async function getTranslatedWord(word: string) {
 		console.log('Received a translation request!');
 		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translate', 
 		{ 
+			//these can be removed from the client side
 			headers: {
 				'Access-Control-Allow-Origin': '*',
 				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
@@ -258,6 +252,7 @@ const Game = () => {
 	async function generateText(prompt: string) {
 		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-text', 
 		{
+			//these can be removed from the client side
 			headers: {
 				'Access-Control-Allow-Origin': '*',
 				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
@@ -272,6 +267,7 @@ const Game = () => {
 		try {
 			const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image', 
 			{
+				//these can be removed from the client side
 				headers: {
 				'Access-Control-Allow-Origin': '*',
 				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
@@ -308,7 +304,7 @@ const Game = () => {
 
 	const { parse } = require('csv-parse');
 	//grab word
-	const fetchRandomWord = async () => {
+	const fetchRandomWord = async (length: number) => {
 		try {
 			const response = await axios.get(
 				dictionaryLink,
@@ -316,11 +312,14 @@ const Game = () => {
 			);
 			parse(response.data, { columns: true, trim: true }, async function (err: any, data: any[]) {
 				if (err) throw err;
-				let hindiWords = data.map((row: { hword: any; }) => row.hword);
+				let strings = data.map((row: { hword: any; }) => row.hword);
 				//console.log("yes@@",data[0].hword);
 				//console.log(hindiWords[0]); // hindiWords is not loaded.
 				//console.log("yes",hindiWords[Math.floor(Math.random() * hindiWords.length)]);
-				const currentWord_ = hindiWords[Math.floor(Math.random() * hindiWords.length)];
+
+				//subset of words due to level
+				const filteredWords = strings.filter(word => word.length <= level.wordLength);
+				const currentWord_ = filteredWords[Math.floor(Math.random() * filteredWords.length)];
 				const translation = await getTranslatedWord(currentWord_);
 				setTranslatedWord(translation);
 				console.log(translation);
@@ -334,7 +333,6 @@ const Game = () => {
   					wordDefinitionDiv.innerHTML = definition.content;
 				}	
 
-			
 				//generate image and display it
 				console.log("1");
 				try {
@@ -355,9 +353,6 @@ const Game = () => {
 				  } catch (error) {
 					console.log(`Error generating image: ${error}`);
 				  }
-				 
-				
-		
 			});
 		} catch (error) {
 			console.log(error);
@@ -375,6 +370,11 @@ const Game = () => {
 				console.log("1")
 				console.log(points)
 				setGuess([]);
+
+				// call level up, but this does not make the final decision of levelling up
+				if (points >= targetPoints) {
+					levelUp();
+				}
 			}
 			setGuess([]);
 			//resetTranscript()
@@ -383,10 +383,8 @@ const Game = () => {
 			setIsGuessing(false)
 			const currentIndex = words.indexOf(currentWord)
 			//setCurrentWord(words[currentIndex + 1])
-			fetchRandomWord()
-
+			fetchRandomWord(level.id)
 			console.log("setGuess('')")
-
 		}
 	}
 
@@ -405,8 +403,8 @@ const Game = () => {
 		//}, 10000000);
 	}
 
-
 	return (
+		//bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide
 		<div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
 			<Head>
 				<title>Word Guessing Game</title>
