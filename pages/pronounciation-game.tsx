@@ -84,8 +84,7 @@ const Game = () => {
 	const [listening, setListening] = useState(false);
 	const [level, setLevel] = useState(levels[0]);
 	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
-	const { transcript } = useSpeechRecognition()
-	const { resetTranscript } = useSpeechRecognition()
+	const { transcript,resetTranscript } = useSpeechRecognition()
 
 
 	  useEffect(() => {
@@ -108,12 +107,6 @@ const Game = () => {
 		  console.log("transcript1:",[transcript])
 	  }, [transcript]);
 
-
-	const handleReset = () => {
-		resetTranscript();
-	};
-
-
 	//------------------------------------------------------ just debugging IGNORE
 	useEffect(() => {console.log('Current transcript:', transcript);}, [transcript]);
 	  const logTranscript = () => {console.log("Current transcript:", transcript);};
@@ -126,7 +119,7 @@ const Game = () => {
 	
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
-		//SpeechRecognition.abortListening();
+		SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
 		axios
 		  .get("https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce", {
@@ -155,9 +148,9 @@ const Game = () => {
 				audio.play();
 
 				// resume listening after the audio finishes playing
-				//audio.addEventListener('ended', () => {
-				//	SpeechRecognition.startListening({ continuous: true, language: language });
-				//});
+				audio.addEventListener('ended', () => {
+					SpeechRecognition.startListening({ continuous: true, language: langCode });
+				});
 		  })
 		  .catch((error) => {
 			console.error(error);
@@ -172,7 +165,7 @@ const Game = () => {
 	const startGame = () => {
 		//setGuess([]);
 		setGuess('');
-		handleReset();
+		resetTranscript();
 		setIsPlaying(true)
 		//this below is used for testing 
 		//setWords(HindiWords)
@@ -424,7 +417,7 @@ const Game = () => {
 							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
 							onClick={() => {
 								guessWord();
-								handleReset();
+								resetTranscript();
 							}}
 						>
 							Guess
