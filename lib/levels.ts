@@ -23,5 +23,4 @@ export const levels = [
         wordLength: Number.MAX_SAFE_INTEGER,
         pointsTillNextLevel: 0
     },
-    // Add more levels if needed
   ];

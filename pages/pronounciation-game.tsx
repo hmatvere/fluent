@@ -71,7 +71,8 @@ const Game = () => {
 	//the page anyway 
 	const [language, setLanguage] = useState(languageCode || 'hi-IN')
 	//const [guess, setGuess] = useState('') from before I used useState<string[]>([]);
-	const [guess, setGuess] = useState<string[]>([]);
+	//const [guess, setGuess] = useState<string[]>([]);
+	const [guess, setGuess] = useState<string>('');
 	const [words, setWords] = useState<string[]>([]);
 	const [currentWord, setCurrentWord] = useState<string | null>(null)
 	const [points, setPoints] = useState(0)
@@ -83,16 +84,9 @@ const Game = () => {
 	const [listening, setListening] = useState(false);
 	const [level, setLevel] = useState(levels[0]);
 	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
-
-
-	function processTranscript() {
-		 setGuess((prevGuess) => [...prevGuess, currentTranscript]);
-    	 setIsSpeaking(false);
-    	 setCurrentTranscript('');
-	  }
-
 	const { transcript } = useSpeechRecognition()
 	const { resetTranscript } = useSpeechRecognition()
+
 
 	  useEffect(() => {
 		const startListening = async () => {
@@ -110,37 +104,8 @@ const Game = () => {
 	  }, [languageCode]);
 	
 	  useEffect(() => {
-		console.log('Current transcript:', transcript);
-	  }, [transcript]);
-	  
-	  // Add this function inside your component
-	  const logTranscript = () => {
-		console.log("Current transcript:", transcript);
-	  };
-	  
-	  // Add a useEffect hook to call logTranscript whenever the transcript value changes
-	  useEffect(() => {
-		logTranscript();
-	  }, [transcript]);
-
-
-	  useEffect(() => {
-		// Log the current transcript
-		console.log("Current transcript:", transcript);
-	  
-		if (transcript) {
-		  // Set isSpeaking to true if there is a transcript
-		  setIsSpeaking(true);
-	  
-		  // Update the guess array with the new transcript
-		  setGuess((prevGuess) => [...prevGuess, transcript]);
-	  
-		  // Reset the transcript
-		  resetTranscript();
-		} else {
-		  // Set isSpeaking to false if there is no transcript
-		  setIsSpeaking(false);
-		}
+		  setGuess(transcript);
+		  console.log("transcript1:",[transcript])
 	  }, [transcript]);
 
 
@@ -148,13 +113,20 @@ const Game = () => {
 		resetTranscript();
 	};
 
-	useEffect(() => {
-		console.log('Listening:', listening);
-	  }, [listening]);
 
+	//------------------------------------------------------ just debugging IGNORE
+	useEffect(() => {console.log('Current transcript:', transcript);}, [transcript]);
+	  const logTranscript = () => {console.log("Current transcript:", transcript);};
+	  // Add a useEffect hook to call logTranscript whenever the transcript value changes
+	  useEffect(() => {logTranscript();}, [transcript]);
+	//just to see if mic is listening
+	useEffect(() => {console.log('Listening:', listening);}, [listening]);
+//------------------------------------------------------ just debugging IGNORE
+
+	
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
-		SpeechRecognition.abortListening();
+		//SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
 		axios
 		  .get("https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce", {
@@ -183,9 +155,9 @@ const Game = () => {
 				audio.play();
 
 				// resume listening after the audio finishes playing
-				audio.addEventListener('ended', () => {
-					SpeechRecognition.startListening({ continuous: true, language: language });
-				});
+				//audio.addEventListener('ended', () => {
+				//	SpeechRecognition.startListening({ continuous: true, language: language });
+				//});
 		  })
 		  .catch((error) => {
 			console.error(error);
@@ -198,7 +170,8 @@ const Game = () => {
 	}, [words])
 
 	const startGame = () => {
-		setGuess([]);
+		//setGuess([]);
+		setGuess('');
 		handleReset();
 		setIsPlaying(true)
 		//this below is used for testing 
@@ -209,12 +182,13 @@ const Game = () => {
 
 	const levelUp = () => {
 		// Implement an animation or graphic here for the level transition
-	  
+		console.log("7")
 		// Update the level state
 		const nextLevelIndex = levels.findIndex((l) => l.id === level.id) + 1;
 		if (nextLevelIndex < levels.length) {
+			console.log("767")
 		  setLevel(levels[nextLevelIndex]);
-		  setTargetPoints(levels[nextLevelIndex].wordLength); // Set the target points for the next level
+		  setTargetPoints(levels[nextLevelIndex].pointsTillNextLevel); // Set the target points for the next level
 		} else {
 		  //user is max level, they keep going till they get bored. Do it where a certain number of wrong guesses in a row
 		  //e.g 4 means its game over, and you have to start from scratch
@@ -222,13 +196,13 @@ const Game = () => {
 	  };
 
 
-	const handleGuess = (transcript: string) => {
-		if (transcript.trim() !== '') {
-		  setGuess((prevGuess) => [...prevGuess, transcript.trim()]);
-		  setCurrentTranscript('');
-		  resetTranscript();
-		}
-	  };
+	// const handleGuess = (transcript: string) => {
+	// 	if (transcript.trim() !== '') {
+	// 	  setGuess((prevGuess) => [...prevGuess, transcript.trim()]);
+	// 	  setCurrentTranscript('');
+	// 	  resetTranscript();
+	// 	}
+	//   };
 
 	async function getTranslatedWord(word: string) {
 		console.log('Received a translation request!');
@@ -362,24 +336,24 @@ const Game = () => {
 	const guessWord = () => {
 		console.log(currentWord, "<-currentword")
 		if (currentWord) {
-			const lastGuess = guess[guess.length - 1];
+			const lastGuess = guess;
 			console.log("word we spoke: " + lastGuess.toLowerCase())
 			console.log(lastGuess.toLowerCase(), " : ", currentWord.toLowerCase());
 			if (lastGuess.toLowerCase() === currentWord.toLowerCase()) {
 				setPoints(points + 1)
 				console.log("1")
 				console.log(points)
-				setGuess([]);
+				setGuess('');
 
 				// call level up, but this does not make the final decision of levelling up
 				if (points >= targetPoints) {
 					levelUp();
 				}
 			}
-			setGuess([]);
+			setGuess('');
 			//resetTranscript()
 			console.log("transcript:", transcript)
-			setGuess([]);
+			setGuess('');
 			setIsGuessing(false)
 			const currentIndex = words.indexOf(currentWord)
 			//setCurrentWord(words[currentIndex + 1])
@@ -394,8 +368,7 @@ const Game = () => {
   		//if (imgElement) {
     	//imageContainer.removeChild(imgElement);
   		//}
-  setGuess([]);
-		setGuess([]);
+		setGuess('');
 		//handleReset();
 		setIsGuessing(true)
 		// setTimeout(() => {
@@ -421,6 +394,8 @@ const Game = () => {
 						<div className="text-xl mb-4">
 							<span>Language: {lang}</span>
 							<span className="ml-4">Points: {points}</span>
+							<span className="ml-4">Points till next level: {targetPoints}</span>
+							
 						</div>
 						<div className="text-2xl mb-8">
 							<span></span>
@@ -448,9 +423,8 @@ const Game = () => {
 						<button
 							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
 							onClick={() => {
-								handleReset();
-								handleGuess(currentTranscript);
 								guessWord();
+								handleReset();
 							}}
 						>
 							Guess
