@@ -333,15 +333,17 @@ const Game = () => {
 			console.log("word we spoke: " + lastGuess.toLowerCase())
 			console.log(lastGuess.toLowerCase(), " : ", currentWord.toLowerCase());
 			if (lastGuess.toLowerCase() === currentWord.toLowerCase()) {
-				setPoints(points + 1)
-				console.log("1")
-				console.log(points)
 				setGuess('');
+  				setPoints((prevPoints) => {
+    				const updatedPoints = prevPoints + 1;
+    				console.log("1");
+    				console.log(updatedPoints);
 
-				// call level up, but this does not make the final decision of levelling up
-				if (points >= targetPoints) {
-					levelUp();
-				}
+    				if (updatedPoints >= targetPoints) {
+      					levelUp();
+    					}
+					return updatedPoints;
+  					});
 			}
 			setGuess('');
 			//resetTranscript()
