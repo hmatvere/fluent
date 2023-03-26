@@ -10,18 +10,21 @@ const { Configuration, OpenAIApi } = require("openai");
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
+//const corsHandler = cors({ origin: '*' });
 const app = express();
 //const { getLeaderboard, addLeaderboardEntry } = 'functions';//database
 //import { getLeaderboard, addLeaderboardEntry } from 'functions';//database  pointless we are defining them in this file
-app.use(cors({ origin: true }));
+//app.use(cors({ origin: true }));
 
 const corsOptions = {
   origin: "*",  //https://fluent-app-hmatvere.vercel.app
   optionsSuccessStatus: 200,
 };
+const corsHandler = cors(corsOptions);
+app.use(corsHandler);
 
 // Allow preflight requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 //const corsMiddleware = cors(corsOptions);
 // The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
@@ -45,8 +48,6 @@ const db = admin.firestore();//database
 //--translation settings
 const target = 'en';
 
-
-
 const translate = new Translate({
   projectId: 'subtle-seat-368211',
   keyFilename: 'application_default_credentials.json'
@@ -65,7 +66,6 @@ const client = new textToSpeech.TextToSpeechClient();
 process.env.GOOGLE_APPLICATION_CREDENTIALS = "application_default_credentials.json";
 
 class AudioController {
-  
   static async apiGetPronounce(req, res, next) {
   
     try {
@@ -212,41 +212,29 @@ if (req.method === 'OPTIONS') {
 });
 
 //exports.generateImage = functions.https.onRequest(translateApp);
+//app.get('/generate-text',  async (req, res) => {
+app.get('/getLeaderboard',async (req, res) => {
 
-app.get('/getLeaderboard', cors(corsOptions), async (req, res) => {
+    try {
+      const leaderboardRef = db.collection('leaderboard');
+      const snapshot = await leaderboardRef.orderBy('score', 'desc').get();
+      const leaderboardData = snapshot.docs.map((doc) => {
+        return { id: doc.id, ...doc.data() };
+      });
 
-  if (req.method === 'OPTIONS') {
-    // Allows GET requests from any origin with the Content-Type header
-    // and caches preflight response for 3600s
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.set('Access-Control-Max-Age', '3600');
-    res.status(204).send('');
-  } else {
-    // Set CORS headers for main requests
-    res.set('Access-Control-Allow-Origin', '*');
-    // other code
-  }
-
-
-  try {
-
-    const leaderboardRef = db.collection('leaderboard');
-    const snapshot = await leaderboardRef.orderBy('score', 'desc').get();
-
-    const leaderboardData = snapshot.docs.map((doc) => {
-      return { id: doc.id, ...doc.data() };
-    });
-
-    res.status(200).json(leaderboardData);
-  } catch (error) {
-    console.error('Error fetching leaderboard data:', error);
-    res.status(500).json({ error: 'Error fetching leaderboard data' });
-  }
+      res.status(200).json(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+      res.status(500).json({ error: 'Error fetching leaderboard data' });
+    }
 });
 
-app.get('/inputScoreToLeaderboard', async (req, res) => {
+app.post('/inputScoreToLeaderboard', async (req, res) => {
+
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
   try {
     const { name, score } = req.body;
     const newEntry = { name, score };
