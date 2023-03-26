@@ -1,3 +1,7 @@
+/*
+Author: Henri Matvere
+*/
+
 const textToSpeech = require('@google-cloud/text-to-speech');
 const { PassThrough } = require('stream');
 const { Translate } = require('@google-cloud/translate').v2;
@@ -7,6 +11,8 @@ const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+//const { getLeaderboard, addLeaderboardEntry } = 'functions';//database
+//import { getLeaderboard, addLeaderboardEntry } from 'functions';//database  pointless we are defining them in this file
 app.use(cors({ origin: true }));
 
 const corsOptions = {
@@ -20,12 +26,15 @@ app.options('*', cors());
 //const corsMiddleware = cors(corsOptions);
 // The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
 
+//redefining admin twice
 const admin = require('firebase-admin');
 var serviceAccount = require("./subtle-seat-368211-firebase-adminsdk-b2ft1-f94924ba18.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+
+const db = admin.firestore();//database
 
 //app.use(function(req, res, next) {
 //  res.header("Access-Control-Allow-Origin", "https://fluent-app-hmatvere.vercel.app");
@@ -144,8 +153,6 @@ if (req.method === 'OPTIONS') {
 
 //exports.translate = functions.https.onRequest(putsomethinghere);
 
-
-
 // exports.translate = functions.https.onRequest(async (req, res) => {
 //   // Apply the CORS middleware
 //   corsMiddleware(req, res, async () => {
@@ -227,6 +234,36 @@ if (req.method === 'OPTIONS') {
 });
 
 //exports.generateImage = functions.https.onRequest(translateApp);
+
+app.get('/getLeaderboard', async (req, res) => {
+  try {
+    const leaderboardRef = db.collection('leaderboard');
+    const snapshot = await leaderboardRef.orderBy('score', 'desc').get();
+
+    const leaderboardData = snapshot.docs.map((doc) => {
+      return { id: doc.id, ...doc.data() };
+    });
+
+    res.status(200).json(leaderboardData);
+  } catch (error) {
+    console.error('Error fetching leaderboard data:', error);
+    res.status(500).json({ error: 'Error fetching leaderboard data' });
+  }
+});
+
+app.get('/inputScoreToLeaderboard', async (req, res) => {
+  try {
+    const { name, score } = req.body;
+    const newEntry = { name, score };
+
+    await db.collection('leaderboard').add(newEntry);
+
+    res.status(201).json({ message: 'High score entry added successfully' });
+  } catch (error) {
+    console.error('Error adding high score entry:', error);
+    res.status(500).json({ error: 'Error adding high score entry' });
+  }
+});
 
 app.get('/', (req,res) => {
   res.send('asdjkl;fghbsdfil;hkghjkldfgbm,.bdlKfghjuiklsdrwvg idf,.gvuk');
