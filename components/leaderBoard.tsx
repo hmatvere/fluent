@@ -3,25 +3,24 @@ Author: Henri Matvere
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { LeaderboardEntry } from '../pages/pronounciation-game-over';
 
 const Leaderboard: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   const getLeaderBoard = useCallback(async (): Promise<LeaderboardEntry[]> => {
-    const response = await fetch('https://us-central1-subtle-seat-368211.cloudfunctions.net/getLeaderboard', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    try {
+      const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/getLeaderboard', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (!response.ok) {
+      return response.data;
+    } catch (error) {
       throw new Error('Failed to fetch leaderboard data');
     }
-
-    const data = await response.json();
-    return data;
   }, []);
 
   useEffect(() => {
