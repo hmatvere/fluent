@@ -371,6 +371,33 @@ const Game = () => {
 		//}, 10000000);
 	}
 
+	//when time runs out its game over
+	const Timer = () => {
+		const [time, setTime] = useState(60);
+	  
+		useEffect(() => {
+		  if (time > 0) {
+			const timer = setTimeout(() => {
+			  setTime(time - 1);
+			}, 1000);
+	  
+			return () => clearTimeout(timer);
+		   } else {
+			router.push('pronounciation-game-over'); //game over with language as argument
+		  }
+		}, [time]);
+	  
+		const minutes = Math.floor(time / 60).toString().padStart(2, '0');
+		const seconds = (time % 60).toString().padStart(2, '0');
+	  
+		return (
+		  <div className="timer">
+			<div className="time-left" style={{ width: `${(time / 60) * 100}%` }}></div>
+			<div className="time-display">{`${minutes}:${seconds}`}</div>
+		  </div>
+		);
+	  };
+
 	return (
 		//bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide
 		<div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
@@ -384,13 +411,16 @@ const Game = () => {
 				<h1 className="text-3xl font-bold mb-8">
 					Pronunciation skills
 				</h1>
+				<div className="text-xl mb-4">
+							<span className="ml-4">Difficulty: {level.name}</span>
+						</div>
 				{isPlaying ? (
 					<div className="flex flex-col items-center">
 						<div className="text-xl mb-4">
 							<span>Language: {lang}</span>
+							<Timer/>
 							<span className="ml-4">Points: {points}</span>
-							<span className="ml-4">Points till next level: {targetPoints}</span>
-							
+							<span className="ml-4">Difficulty increase after {targetPoints} {targetPoints === 1 ? 'point' : 'points'}</span>
 						</div>
 						<div className="text-2xl mb-8">
 							<span></span>
@@ -436,15 +466,6 @@ const Game = () => {
 					</div>
 				)}
 			</main>
-			<footer className="absolute bottom-0 w-full text-center py-4">
-				<a
-					
-				>
-					<div className="text-sm text-gray-500">
-						©2023 Fluent. All rights reserved.
-					</div>
-				</a>
-			</footer>
 		</div>
 	);
 }
