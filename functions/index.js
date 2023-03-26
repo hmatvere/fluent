@@ -137,11 +137,8 @@ if (req.method === 'OPTIONS') {
   const { word } = req.query;
   try {
 
-
     // Translates the word to English
     const [translation] = await translate.translate(word, 'en');
-
-
 
     //Sends the translated word back to the client-side
     res.send({ translation });
@@ -150,25 +147,6 @@ if (req.method === 'OPTIONS') {
   res.status(500).send({ error: `Failed to translate ${word} to English` });
   }
 });
-
-//exports.translate = functions.https.onRequest(putsomethinghere);
-
-// exports.translate = functions.https.onRequest(async (req, res) => {
-//   // Apply the CORS middleware
-//   corsMiddleware(req, res, async () => {
-//     const { word } = req.query;
-//     try {
-//       // Translates the word to English
-//       const [translation] = await translate.translate(word, 'en');
-  
-//       // Sends the translated word back to the client-side
-//       res.send({ translation });
-//     } catch (e) {
-//       console.error(`Failed to translate ${word} to English: ${e}`);
-//       res.status(500).send({ error: `Failed to translate ${word} to English` });
-//     }
-//   });
-// });
 
 app.get('/generate-text',  async (req, res) => {
   //const { prompt, length } = req.body;
@@ -235,8 +213,25 @@ if (req.method === 'OPTIONS') {
 
 //exports.generateImage = functions.https.onRequest(translateApp);
 
-app.get('/getLeaderboard', async (req, res) => {
+app.get('/getLeaderboard', cors(corsOptions), async (req, res) => {
+
+  if (req.method === 'OPTIONS') {
+    // Allows GET requests from any origin with the Content-Type header
+    // and caches preflight response for 3600s
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+  } else {
+    // Set CORS headers for main requests
+    res.set('Access-Control-Allow-Origin', '*');
+    // other code
+  }
+
+
   try {
+
     const leaderboardRef = db.collection('leaderboard');
     const snapshot = await leaderboardRef.orderBy('score', 'desc').get();
 
