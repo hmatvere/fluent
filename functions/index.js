@@ -33,9 +33,11 @@ app.options('*', cors(corsOptions));
 const admin = require('firebase-admin');
 var serviceAccount = require("./subtle-seat-368211-firebase-adminsdk-b2ft1-f94924ba18.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+//admin.initializeApp({
+//  credential: admin.credential.cert(serviceAccount)
+//});
+
+admin.initializeApp();
 
 const db = admin.firestore();//database
 
@@ -215,13 +217,24 @@ if (req.method === 'OPTIONS') {
 //app.get('/generate-text',  async (req, res) => {
 app.get('/getLeaderboard',async (req, res) => {
 
-    try {
-      const leaderboardRef = db.collection('leaderboard');
-      const snapshot = await leaderboardRef.orderBy('score', 'desc').get();
-      const leaderboardData = snapshot.docs.map((doc) => {
-        return { id: doc.id, ...doc.data() };
-      });
+  // These headers don't seem to fix the CORS issue
+  res.header("Access-Control-Allow-Origin", "firestore.googleapis.com");
+  res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+  res.header("Access-Control-Allow-Methods", "DELETE, GET, POST, PUT, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Credentials", true);
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
 
+    try {
+      const snapshot = await admin.firestore().collection('leaderboard').get();
+      const leaderboardData = [];
+      snapshot.forEach((doc) => {
+        console.log(doc.id, '=>', doc.data());
+        leaderboardData.push({id: doc.id, ...doc.data()});
+      });
       res.status(200).json(leaderboardData);
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
@@ -232,6 +245,7 @@ app.get('/getLeaderboard',async (req, res) => {
 app.post('/inputScoreToLeaderboard', async (req, res) => {
 
   res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
   res.set('Access-Control-Allow-Methods', 'GET');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -239,7 +253,7 @@ app.post('/inputScoreToLeaderboard', async (req, res) => {
     const { name, score } = req.body;
     const newEntry = { name, score };
 
-    await db.collection('leaderboard').add(newEntry);
+    await db.collection('/leaderboard/mIVn1ZiYNrBOgC5pCbTa').add(newEntry);
 
     res.status(201).json({ message: 'High score entry added successfully' });
   } catch (error) {
