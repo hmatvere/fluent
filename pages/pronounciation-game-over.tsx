@@ -2,30 +2,48 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Header from '../components/Header';
 import axios from 'axios';
+import { useRouter } from 'next/router';
+
 
 export interface LeaderboardEntry {
+    language: string,
     name: string;
     score: number;
   }  
 
-const GameOver = ({ score }: { score: number }) => {
+const GameOver = () => {
+    
     const [name, setName] = useState('');
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const router = useRouter();
+    const score = router.query.score as string;
+    const language = router.query.language as string;
   
-    const submitHighScore = async (name: string, score: number) => {
-      const response = await fetch('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/inputScoreToLeaderboard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, score }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to submit high score');
-      }
-    };
-  
+    const submitHighScore = async (name: string, score: number, language: string) => {
+        //just for testing
+        if (isNaN(score)) {
+            score = 1;
+          }
+          if (true) {
+            language = 'Hindi';
+          }
+      
+        try {
+            console.log("score:",score)
+            console.log("score:",language)
+          const response = await axios.post('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/inputScoreToLeaderboard', {
+            name,
+            score,
+            language
+          });
+        
+          console.log("Submit high score response:", response.data);
+        } catch (error) {
+          console.error("Error submitting high score:", error);
+          throw error;
+        }
+      };
+    
     async function fetchLeaderboard() {
       console.log('Fetching leaderboard data!');
       try {
@@ -39,7 +57,17 @@ const GameOver = ({ score }: { score: number }) => {
         });
     
         console.log("leaderboard data:", response.data);
-        setLeaderboard(response.data);
+
+        const transformedData = response.data.map((entry: any) => ({
+            language: entry.Language,
+            name: entry.Name,
+            score: entry.Score
+          }));
+
+            // Sort the leaderboard data by score in descending order
+            transformedData.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score);
+
+          setLeaderboard(transformedData);
       } catch (error) {
         console.error("Error fetching leaderboard data:", error);
         throw error;
@@ -63,7 +91,7 @@ const GameOver = ({ score }: { score: number }) => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              submitHighScore(name, score);
+              submitHighScore(name, Number(score), language);
             }}
           >
             <label className="mb-2">
@@ -83,13 +111,24 @@ const GameOver = ({ score }: { score: number }) => {
             </button>
           </form>
           <h2 className="text-2xl font-bold mb-4">Leaderboard</h2>
-          <ul>
-            {leaderboard.map((entry, index) => (
-              <li key={index}>
-                {entry.name} - {entry.score}
-              </li>
-            ))}
-          </ul>
+          <table>
+  <thead>
+    <tr>
+      <th>Score</th>
+      <th>Name</th>
+      <th>Language</th>
+    </tr>
+  </thead>
+  <tbody>
+    {leaderboard.map((entry, index) => (
+      <tr key={index}>
+        <td>{entry.score}</td>
+        <td>{entry.name}</td>
+        <td>{entry.language}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
         </div>
       </>
     );
