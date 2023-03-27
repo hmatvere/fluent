@@ -243,17 +243,28 @@ app.get('/getLeaderboard',async (req, res) => {
 });
 
 app.post('/inputScoreToLeaderboard', async (req, res) => {
-
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
-  res.set('Access-Control-Allow-Methods', 'GET');
+  res.set('Access-Control-Allow-Methods', 'GET, POST');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
-    const { name, score } = req.body;
-    const newEntry = { name, score };
+    const { name, score, language } = req.body;
+    const newEntry = { name, score, language };
 
-    await db.collection('/leaderboard/mIVn1ZiYNrBOgC5pCbTa').add(newEntry);
+    const res = await db.collection('leaderboard').add({
+      Language: language,
+      Name: name,
+      Score: score,
+    });
+
+    //const res = await db.collection('leaderboard').add({
+    //  Language: 'Hindi',
+    //  Name: 'james',
+    //  Score: 45,
+    //});
+
+    //await db.collection('leaderboard').add(newEntry);
 
     res.status(201).json({ message: 'High score entry added successfully' });
   } catch (error) {
