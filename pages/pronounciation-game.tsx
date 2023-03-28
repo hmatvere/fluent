@@ -39,7 +39,8 @@ const LANGUAGE_MAP: {[key: string]: string} = {
 	'ગુજરાતી': 'gu-IN'
   };
 
-const LANG_ = {
+//const LANG_ = {
+const LANG_: {[key: string]: string} = {
 	'Hindi': 'hi-IN',
 	'Nepali': 'ne-NP',
 	'Gujarati': 'gu-IN',
@@ -373,7 +374,7 @@ const Game = () => {
 
 	//when time runs out its game over
 	const Timer = () => {
-		const [time, setTime] = useState(60);
+		const [time, setTime] = useState(7);
 	  
 		useEffect(() => {
 		  if (time > 0) {
@@ -383,7 +384,12 @@ const Game = () => {
 	  
 			return () => clearTimeout(timer);
 		   } else {
-			router.push('pronounciation-game-over'); //game over with language as argument
+			const inputLanguageName = Object.keys(LANG_).find(key => LANG_[key] === language);
+			console.log("inputLanguageName:",inputLanguageName);
+			router.push({
+				pathname: '/pronounciation-game-over',
+				query: { inputLanguageName, points },
+			  });
 		  }
 		}, [time]);
 	  

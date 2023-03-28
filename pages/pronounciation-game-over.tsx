@@ -11,26 +11,30 @@ export interface LeaderboardEntry {
     score: number;
   }  
 
+ 
+
 const GameOver = () => {
     
     const [name, setName] = useState('');
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const router = useRouter();
-    const score = router.query.score as string;
-    const language = router.query.language as string;
+    const inputLanguageName = router.query.inputLanguageName as string;
+    const points = router.query.points as string;
+
+
   
     const submitHighScore = async (name: string, score: number, language: string) => {
         //just for testing
         if (isNaN(score)) {
             score = 1;
           }
-          if (true) {
-            language = 'Hindi';
-          }
+          //if (true) {
+          //  language = 'Hindi';
+          //}
       
         try {
             console.log("score:",score)
-            console.log("score:",language)
+            console.log("language:",language)
           const response = await axios.post('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/inputScoreToLeaderboard', {
             name,
             score,
@@ -87,12 +91,14 @@ const GameOver = () => {
         <Header />
         <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-900 text-white">
           <h1 className="text-4xl font-bold mb-4">Game Over</h1>
-          <h2 className="text-2xl font-bold mb-4">Your score: {score}</h2>
+          <h2 className="text-2xl font-bold mb-4">Your score: {points}</h2>
           <form
             onSubmit={(e) => {
-              e.preventDefault();
-              submitHighScore(name, Number(score), language);
-            }}
+                e.preventDefault();
+                if (typeof inputLanguageName === 'string') {
+                  submitHighScore(name, Number(points), inputLanguageName);
+                }
+              }}
           >
             <label className="mb-2">
               Your Name:
