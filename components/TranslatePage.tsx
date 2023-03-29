@@ -10,17 +10,22 @@ const TranslatePage: NextPage = () => {
   const [translatedText, setTranslatedText] = useState("");
 
 
-  async function handleSubmit(text: string, targetLanguage: string) {
+  async function handleSubmit(word: string, targetLanguage: string) {
 		console.log('Received a translation request!');
+    console.log("text,",word);
+    console.log("text",encodeURIComponent(word));
+    console.log("text,",word);
+    console.log("text",encodeURIComponent(targetLanguage));
 		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translateTarget', 
     {
     params: {
-      text: encodeURIComponent(text),
+      word: encodeURIComponent(word),
       targetLanguage: encodeURIComponent(targetLanguage)
     }
     });
 		const translation = response.data.translation;
-    setTranslatedText(translation);
+    // decodeURIComponent(encodedString)
+    setTranslatedText(decodeURIComponent(translation));
 		//const response = await axios.get('/translate', { params: { word } });
 		//return response.data;
 	}
