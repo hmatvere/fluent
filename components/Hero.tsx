@@ -6,17 +6,16 @@ import Image from 'next/image';
 
 type Props = {}
 
-function Hero({}: Props) {
-    const [text] = useTypewriter ({
-        words: [
-            "Welcome To Fluent",
-            "We will turn you into a Language Wizard",
-            "...Scroll down to learn more",
-        ],
-        loop: 0,
-        delaySpeed: 2000,
-      });
-
+const Hero: React.FC = () => {
+    const [text] = useTypewriter({
+      words: [
+        "Welcome To Fluent",
+        "We will turn you into a Language Wizard",
+        "...Scroll down to learn more",
+      ],
+      loop: 0,
+      delaySpeed: 2001,
+    });
   return (
     <div className='h-screen flex flex-col space-y-8 items-center justify-center text-center overflow-hidden'>
         <BackgroundCircles />

@@ -28,6 +28,12 @@ const GameOver = () => {
         if (isNaN(score)) {
             score = 1;
           }
+
+          //if someone navigates to the url without palying they will have 0 score therefore no score can be submitted
+          if(score==0){
+            router.push('/');
+            return;
+          }
           //if (true) {
           //  language = 'Hindi';
           //}
@@ -77,19 +83,22 @@ const GameOver = () => {
         throw error;
       }
     }
-  
+
     useEffect(() => {
       fetchLeaderboard();
     }, []);
   
     return (
       <>
+       
+        <div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
         <Head>
           <title>Game Over</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <Header />
-        <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-900 text-white">
+			<main className="max-w-3xl mx-auto py-8 text-center">
+
           <h1 className="text-4xl font-bold mb-4">Game Over</h1>
           <h2 className="text-2xl font-bold mb-4">Your score: {points}</h2>
           <form
@@ -116,6 +125,7 @@ const GameOver = () => {
               Submit Score
             </button>
           </form>
+          <div className="flex flex-col items-center justify-center">
           <h2 className="text-2xl font-bold mb-4">Leaderboard</h2>
           <table>
   <thead>
@@ -135,6 +145,8 @@ const GameOver = () => {
     ))}
   </tbody>
 </table>
+</div>
+</main>
         </div>
       </>
     );

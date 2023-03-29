@@ -35,13 +35,13 @@ function GameSelection({}: GameSelectionProps) {
         </h3>
         <div className="h-screen flex flex-col relative text-center md:text-left md:flex-row max-w-7xl p-15 justify-evenly mx-auto items-center">
           <div
-            className="bg-[#000000] rounded-xl w-[500px] h-[400px] flex flex-col items-center justify-center duration-500 hover:scale-110 cursor-pointer"
+            className="bg-[#000000] rounded-xl w-[300px] h-[300px] flex flex-col items-center justify-center duration-500 hover:scale-110 cursor-pointer"
             onClick={() => handleGameSelection("pronounciation-game")}
           >
             <h1 className="text-5xl font-bold text-white">Pronunciation</h1>
           </div>
           <div
-            className="bg-[#000000] rounded-xl w-[500px] h-[400px] flex flex-col items-center justify-center duration-500 hover:scale-110 cursor-pointer"
+            className="bg-[#000000] rounded-xl w-[300px] h-[300px] flex flex-col items-center justify-center duration-500 hover:scale-110 cursor-pointer"
             onClick={() => handleGameSelection("wordsearch")}
           >
             <h1 className="text-5xl font-bold text-white">Wordsearch</h1>

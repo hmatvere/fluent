@@ -96,3 +96,10 @@
   .leaderboard-entry:last-child {
     border-bottom: none;
   }
+
+
+  .form-fade-out {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.5s ease-out;
+  }

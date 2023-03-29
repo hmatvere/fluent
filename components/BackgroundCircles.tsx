@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 type Props = {}
 
-function BackgroundCircles({}: Props) {
+const BackgroundCircles: React.FC = () => {
   return (
     <motion.div
     initial={{

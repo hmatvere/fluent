@@ -8,27 +8,14 @@ import "regenerator-runtime/runtime"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useRouter } from 'next/router';
 import ReactModal from 'react-modal';
-//import styles from '../styles/FeedbackGraphic.module.css';
-//import fetch from 'node-fetch';
-//import { FileReader } from 'file-reader'
-//import Config from 'react-native-config';
-//import RNFS from 'react-native-fs';
-//import * as googleTTS from 'google-tts-api'; 
-//const textToSpeech = require('@google-cloud/text-to-speech');
-//import * as textToSpeech from '@google-cloud/text-to-speech';
-//import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import * as textToSpeech from '@google-cloud/text-to-speech';
 import ISynthesizeSpeechRequest from '@google-cloud/text-to-speech';
-//import * as FileSaver from 'file-saver';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Services from "../components/Services";
 import axios from 'axios';
-//import csv from 'csv-parser';
 import parse from 'csv-parse';
 import { debug } from "util";
-//import Translate from '@google-cloud/translate';
-//import { Translate } from '@google-cloud/translate';
 import { Translate } from '@google-cloud/translate/build/src/v2';
 import { levels } from '../lib/levels';
 
@@ -39,7 +26,6 @@ const LANGUAGE_MAP: {[key: string]: string} = {
 	'ગુજરાતી': 'gu-IN'
   };
 
-//const LANG_ = {
 const LANG_: {[key: string]: string} = {
 	'Hindi': 'hi-IN',
 	'Nepali': 'ne-NP',
@@ -71,8 +57,6 @@ const Game = () => {
 	//ideally use local storage for this but for now this will work as the user should not really need to be refreshing
 	//the page anyway 
 	const [language, setLanguage] = useState(languageCode || 'hi-IN')
-	//const [guess, setGuess] = useState('') from before I used useState<string[]>([]);
-	//const [guess, setGuess] = useState<string[]>([]);
 	const [guess, setGuess] = useState<string>('');
 	const [words, setWords] = useState<string[]>([]);
 	const [currentWord, setCurrentWord] = useState<string | null>(null)
@@ -85,7 +69,11 @@ const Game = () => {
 	const [listening, setListening] = useState(false);
 	const [level, setLevel] = useState(levels[0]);
 	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
-	const { transcript,resetTranscript } = useSpeechRecognition()
+	const { transcript,resetTranscript } = useSpeechRecognition();
+	const [gameStarted, setGameStarted] = useState(false);
+	const [time, setTime] = useState(17);
+	const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+	
 
 
 	  useEffect(() => {
@@ -139,19 +127,22 @@ const Game = () => {
 			const binaryData = response.data;
 				const blob = new Blob([binaryData], { type: 'audio/mpeg' });
 				const url = URL.createObjectURL(blob);
-				const audio = new Audio(url);
-				audio.preload = "none";
+				const newAudio = new Audio(url);
+				newAudio.preload = "none";
 				console.log("url:", url);
-				console.log("audio.src", audio.src);
-				console.log("audio:", audio);
+				console.log("audio.src", newAudio.src);
+				console.log("audio:", newAudio);
 				//const audio = new Audio(response.data);
 				//console.log(response.data);
-				audio.play();
+				newAudio.play();
 
 				// resume listening after the audio finishes playing
-				audio.addEventListener('ended', () => {
+				newAudio.addEventListener('ended', () => {
 					SpeechRecognition.startListening({ continuous: true, language: langCode });
 				});
+
+				setAudio(newAudio);
+				
 		  })
 		  .catch((error) => {
 			console.error(error);
@@ -167,6 +158,7 @@ const Game = () => {
 		//setGuess([]);
 		setGuess('');
 		resetTranscript();
+		handleStart();
 		setIsPlaying(true)
 		//this below is used for testing 
 		//setWords(HindiWords)
@@ -358,43 +350,39 @@ const Game = () => {
 		}
 	}
 
-	const startGuessing = async () => {
-		//const imageContainer = document.getElementById('image-container');
-  		//const imgElement = imageContainer.querySelector('img');
-  		//if (imgElement) {
-    	//imageContainer.removeChild(imgElement);
-  		//}
-		setGuess('');
-		//handleReset();
-		setIsGuessing(true)
-		// setTimeout(() => {
-		//   setGuess('');
-		//}, 10000000);
-	}
-
 	//when time runs out its game over
-	const Timer = () => {
-		const [time, setTime] = useState(7);
+	const Timer = ({ gameStarted, time }: { gameStarted: boolean, time: number }) => {
+	
 	  
 		useEffect(() => {
-		  if (time > 0) {
+		  if (gameStarted && time > 0) {
 			const timer = setTimeout(() => {
 			  setTime(time - 1);
 			}, 1000);
 	  
 			return () => clearTimeout(timer);
-		   } else {
+		   } else if (gameStarted && time === 0){
+			
 			const inputLanguageName = Object.keys(LANG_).find(key => LANG_[key] === language);
+
+			
+			if (audio) {
+				audio.pause();
+			  }
+
+
 			console.log("inputLanguageName:",inputLanguageName);
 			router.push({
 				pathname: '/pronounciation-game-over',
 				query: { inputLanguageName, points },
 			  });
 		  }
-		}, [time]);
+		}, [gameStarted, time]);
 	  
 		const minutes = Math.floor(time / 60).toString().padStart(2, '0');
 		const seconds = (time % 60).toString().padStart(2, '0');
+
+		
 	  
 		return (
 		  <div className="timer">
@@ -402,6 +390,11 @@ const Game = () => {
 			<div className="time-display">{`${minutes}:${seconds}`}</div>
 		  </div>
 		);
+	  };
+
+	  
+	  const handleStart = () => {
+		setGameStarted(true);
 	  };
 
 	return (
@@ -424,7 +417,7 @@ const Game = () => {
 					<div className="flex flex-col items-center">
 						<div className="text-xl mb-4">
 							<span>Language: {lang}</span>
-							<Timer/>
+							<Timer gameStarted={gameStarted} time={time} />
 							<span className="ml-4">Points: {points}</span>
 							<span className="ml-4">Difficulty increase after {targetPoints} {targetPoints === 1 ? 'point' : 'points'}</span>
 						</div>
@@ -467,6 +460,7 @@ const Game = () => {
 							className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
 							onClick={startGame}
 						>
+							
 							Start Game
 						</button>
 					</div>

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 type Props = {}
 
-function Header({}: Props) {
+const Header: React.FC = () => {
   return (
     <header className='top-0 p-5 items-start sticky flex justify-between max-w-7xl mx-auto z-20 xl:items-center'>
         <motion.div 
