@@ -1,5 +1,4 @@
 import { useState, ChangeEvent, MouseEvent } from "react";
-import openai from "openai";
 import axios from "axios";
 
 interface Props {}
@@ -8,32 +7,17 @@ const ImageGenerator: React.FC<Props> = () => {
   const [prompt, setPrompt] = useState<string>("");
   const [image, setImage] = useState<string>("");
 
-  const handleClick = async () => {
+  //const handleClick = async () => {
+  async function handleClick() {
     try {
-      const openaiApiKey = process.env.NEXT_PUBLIC_DALLE_API_KEY;
-      if (!openaiApiKey) {
-        console.error("OpenAI API key not found.");
-        return;
-      }
-
-      const response = await axios.post(
-        "https://api.openai.com/v1/images/generations",
+      const response = await axios.get(
+        "https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image",
         {
-          model: "image-alpha-001",
-          prompt: prompt,
-          n: 1,
-          size: "1024x1024",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openaiApiKey}`,
-          },
+          params: { prompt }
         }
       );
-
-      const imageUrl = response.data.data[0].url;
-      setImage(imageUrl);
+      const imgUrl = response.data.imageUrl;
+      setImage(imgUrl);
     } catch (error) {
       console.error("Error generating image:", error);
     }

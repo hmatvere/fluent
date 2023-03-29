@@ -1,0 +1,12 @@
+module.exports = {
+    "type": "service_account",
+    "project_id": "fluent-languages",
+    "private_key_id": "170da08d9240e0bd71db480c883870019d294d01",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDPPv/ScCfYgiNk\n7KHvBPGk5brSyP1xnzxp2AuL1CUHuWfcosKt36GYCjMpvM7+gpAtPrUsZjZCnRYU\nQiDRYwODcERtBsDuQ2mOT2jfvzlyPTxmzRl3Iv+AiRFt6CzXRJkqDHtQEI/3p0cO\ngSVRLDU3STf+aUcyiBdP/Hi87RnNurA9ZIoL+qfFfiGEyK4JqA6Enw7QnxHD2qlI\nXWwXXcLl+yEjcJxw7wDigx87rnWVXoNRri8jcgCaS9clgBy52hbPzuQVLONhbzZ+\ngMBO1dpHWuDVlHyvzY2SDon0nd4Hn8GnqU1i4QSa0hSOMukvqvIuAemj/EP6g9ut\nQFokUl/rAgMBAAECggEAD33zG6T8pYec47d4p2hkM+JkY8tYfrzbhEH9Ive5yOkI\nJYsZKGw2JSpmBrGxe38BDhDI9EezuKkLdHo4/835/kJPKyM9GtJ5OoUfHtKplauU\nL08XnztDhDU6009uwqzDEkyajzKdwHKFskTfKEE4vShBAkiWZOWdcII7+Et1CVbP\n0ez9vso7JhIp4BHEKnwfWdoIQEGGrerAPEBC3qqat/UbYss8HzFeorLv2AUXNV2C\n1nnldaV8P26K4rxrSYaJUOXPpklHdVbFUKSR+/aPzRUNldUNFmT1us/MKDlfKGVQ\nWBMWOKt2uxLsdgCbDeQvd6RgZqB5Sv2ipexjA97c4QKBgQDrdsuxnVrhGICrYFD9\n7IeuZj2NNF5z4ZVTfoUUnYAq0Ei7kGkscLAiteQH2QkcGgCNAmCEPu4KvMIYI9mC\nXEFCNe+OAlMH2M49PAP9x7BpZys6NG5P0cZ5UIDFHp1QsyWY4a1g4Ma+dWOpnCLA\nKbCB6DPEKqjWj+ogn9qzXYMhOwKBgQDhUi54ZdivgsBTRpvw5cXTPTEPXVkuI2k6\nCmgx6HdB8C+9a84Qt3rrIU3o/BJXu9AT4xiUSjUqIBIDFLVJHHGK5eXJjafCAC10\nZ4rja8m+po5Nl42X3QhGRs3V+YIgO4bRlz6+Rla2d7MbGllDSCxtqz3QdDYdwTEU\n5xeIWbTREQKBgACfHqiIXs4LT4OkTHJvJmiKco0l3z31EXzX76f/RnBWfmqoVe69\nGWnuCv0OUJzXYLr+j5ypwd0bZHPF3HQgpDd1hv1b+jYiF2FIAEayOT/9+ro7mzLw\nvdJiKQTcMNQetPGzXs7LqRqlmq6+78SMF6AwKbrR1gJC/P47Dcu9anQzAoGAIxF/\nWg2/49Edzdg3fQ7F81KayCFnN98bCYWFIf9kUEbppzmYINHtt5q/XXud/zmj8PRv\nZuUF0UCcjQ40COT8ZvnRAcWiTndom61h2HN2Os4BZ+Imj3Q/TXDHqH3k2s9o9EXt\n5f9cj5mhrp4zNl2NTKRSQpdTtN3UncQ5zWbo1YECgYBU77o9i2KxC9A7UAR7dE8m\n8pky1fDn/MhJt+z0kxe0zmB48ltQnsX6/8yd0vXKkH3CJrsZG6Sqiu7W8y/pfssX\ndJplaEJ1neuaIeUuPbkpGCiGWfwiXdfiFRVhhrsXEzV+EZbxcLuEE48/LygJ5H2o\nPHEgz+YWH8U23LOzB1Tbww==\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-jws54@fluent-languages.iam.gserviceaccount.com",
+    "client_id": "106192571525985850789",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-jws54%40fluent-languages.iam.gserviceaccount.com"
+}

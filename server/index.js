@@ -136,6 +136,22 @@ app.get('/api/translate', async (req, res) => {
 });
 
 
+app.get('/api/translateTarget', async (req, res) => {
+  const { word } = req.query;
+  const { targetLanguage } = req.query
+ 
+  try {
+    // Translates the word to English
+    const [translation] = await translate.translate(word, targetLanguage);
+
+    // Sends the translated word back to the client-side
+    res.send({ translation });
+  } catch (e) {
+    console.error(`Failed to translate ${word} to English: ${e}`);
+    res.status(500).send({ error: `Failed to translate ${word} to English` });
+  }
+});
+
 app.get('/api/generate-text', async (req, res) => {
   //const { prompt, length } = req.body;
   const { prompt } = req.query;
