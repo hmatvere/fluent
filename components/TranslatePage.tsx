@@ -11,11 +11,6 @@ const TranslatePage: NextPage = () => {
 
 
   async function handleSubmit(word: string, targetLanguage: string) {
-		console.log('Received a translation request!');
-    console.log("text,",word);
-    console.log("text",encodeURIComponent(word));
-    console.log("text,",word);
-    console.log("text",encodeURIComponent(targetLanguage));
 		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translateTarget', 
     {
     params: {

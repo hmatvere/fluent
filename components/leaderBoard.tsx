@@ -54,6 +54,11 @@ export interface Props {
 }
 
 const Leaderboard = ({ leaderboard }: Props) => {
+  const transformedData = [...leaderboard];
+
+  // Sort the leaderboard data by score in descending order
+  transformedData.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score);
+
   return (
     <table className="table-auto">
       <thead>
@@ -64,8 +69,8 @@ const Leaderboard = ({ leaderboard }: Props) => {
         </tr>
       </thead>
       <tbody>
-        {leaderboard.map((entry, index) => (
-          <tr key={index}>
+        {transformedData.slice(0, 20).map((entry, index) => (
+          <tr key={entry.name}>
             <td className="border px-4 py-2">{index + 1}</td>
             <td className="border px-4 py-2">{entry.name}</td>
             <td className="border px-4 py-2">{entry.score}</td>

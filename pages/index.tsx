@@ -10,7 +10,7 @@ import Cultures from "../components/Cultures";
 
 export default function Home() {
   return (
-    <div className="bg-gray-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
+    <div className="bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide">
       <Head>
         <title>Fluent</title>
       </Head>

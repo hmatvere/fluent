@@ -71,9 +71,9 @@ const Game = () => {
 	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
 	const { transcript,resetTranscript } = useSpeechRecognition();
 	const [gameStarted, setGameStarted] = useState(false);
-	const [time, setTime] = useState(17);
+	const [time, setTime] = useState(30);
 	const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-	
+	const [point, setPoint] = useState(1);
 
 
 	  useEffect(() => {
@@ -148,6 +148,40 @@ const Game = () => {
 			console.error(error);
 		  });
 	  }
+
+	  async function loadImageAndPlayAudio(prompt: string, text: string, langCode: string) {
+		try {
+		   // Load the image
+		   const imgURL = await generateImage(prompt);
+
+		   // Wait for the image to load
+		   const image = new Image();
+		   image.src = imgURL as string;
+		   await new Promise((resolve) => {
+			 image.onload = resolve;
+		   });
+
+		   // Create an img element and set its src attribute to the generated image URL
+    const imgElement = document.createElement('img');
+    imgElement.src = imgURL as string;
+
+    // Get a reference to the image container element
+    const imageContainer = document.getElementById('image-container');
+
+    // Append the img element to the image container element
+    if (imageContainer !== null) {
+      imageContainer.appendChild(imgElement);
+    }
+	   
+		   // Play the audio
+		   playText(text, langCode);
+		 } catch (error) {
+		   console.error(error);
+		 }
+	   }
+	  
+
+	   
 	
 	useEffect(() => {
 		if (words.length === 0) return
@@ -224,26 +258,24 @@ const Game = () => {
 
 	//generate image based on prompt.
 	async function generateImage(prompt: string) {
-		try {
-			const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image', 
-			{
-				//these can be removed from the client side
-				headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-			  },
-				params: { prompt }});
-			console.log("3",response.data);
-			console.log("4",transcript);
-			console.log("5");
-			const imgURL_ = response.data.imageUrl;
-			console.log("Imageurl:",imgURL_)
-			return imgURL_;
-		  } catch (error) {
-			console.error(error);
-		  }
-	}
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image',
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+            'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+          },
+          params: { prompt }
+        });
+      const imgURL_ = response.data.imageUrl;
+      resolve(imgURL_);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
 	
 	//dictionaries for each language (nepali and hindi are the same)
 	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
@@ -285,7 +317,8 @@ const Game = () => {
 				console.log(translation);
 				//console.log(generatedText); // This will log the generated text to the console
 				setCurrentWord(currentWord_);
-				playText(currentWord_, languageCode);
+				//playText(currentWord_, languageCode);
+
 				const definition = await generateText("what does "+currentWord_+" mean?")
 				console.log("test:",definition)
 				const wordDefinitionDiv = document.getElementById("word-definition");
@@ -293,25 +326,23 @@ const Game = () => {
   					wordDefinitionDiv.innerHTML = definition.content;
 				}	
 
-				//generate image and display it
-				console.log("1");
+				//generate image and play audio.
+
 				try {
-					console.log("2");
-					const imageUrl = await generateImage(translation);
-					console.log('Generated image URL:', imageUrl);
-					const imageContainer = document.getElementById('image-container');
-					if (imageContainer !== null) {
-						const imgElement = document.createElement('img');
-						imgElement.src = imageUrl;
-						const existingImgElement = imageContainer.querySelector('img');
-						if (existingImgElement) {
-						  imageContainer.replaceChild(imgElement, existingImgElement);
-						} else {
-						  imageContainer.appendChild(imgElement);
-						}
-					  }
+					loadImageAndPlayAudio(translation, currentWord_, languageCode);
+					// const imageContainer = document.getElementById('image-container');
+					// if (imageContainer !== null) {
+					// 	//const imgElement = document.createElement('img');
+					// 	//imgElement.src = imageUrl;
+					// 	const existingImgElement = imageContainer.querySelector('img');
+					// 	if (existingImgElement) {
+					// 		imageContainer.replaceChild(image, existingImgElement);
+					// 	  } else {
+					// 		imageContainer.appendChild(image);
+					// 	  }
+					//   }
 				  } catch (error) {
-					console.log(`Error generating image: ${error}`);
+					console.log(`Error generating image and playing audio: ${error}`);
 				  }
 			});
 		} catch (error) {
@@ -325,10 +356,14 @@ const Game = () => {
 			const lastGuess = guess;
 			console.log("word we spoke: " + lastGuess.toLowerCase())
 			console.log(lastGuess.toLowerCase(), " : ", currentWord.toLowerCase());
+
+			//correct guess
 			if (lastGuess.toLowerCase() === currentWord.toLowerCase()) {
 				setGuess('');
   				setPoints((prevPoints) => {
-    				const updatedPoints = prevPoints + 1;
+					
+    				const updatedPoints = prevPoints + (point);
+					setPoint((prevPoint) => (prevPoint + 1*(point*level.id*currentWord.length))); //increment
     				console.log("1");
     				console.log(updatedPoints);
 
@@ -339,12 +374,12 @@ const Game = () => {
   					});
 			}
 			setGuess('');
-			//resetTranscript()
-			console.log("transcript:", transcript)
+			setPoint(1);//back to 1 point
+			setLevel(levels[0]);//back to level 1
+
 			setGuess('');
 			setIsGuessing(false)
 			const currentIndex = words.indexOf(currentWord)
-			//setCurrentWord(words[currentIndex + 1])
 			fetchRandomWord(level.id)
 			console.log("setGuess('')")
 		}
@@ -417,6 +452,7 @@ const Game = () => {
 					<div className="flex flex-col items-center">
 						<div className="text-xl mb-4">
 							<span>Language: {lang}</span>
+							<span className="ml-4">Get this right and get {point} {point === 1 ? 'point' : 'points'}</span>
 							<Timer gameStarted={gameStarted} time={time} />
 							<span className="ml-4">Points: {points}</span>
 							<span className="ml-4">Difficulty increase after {targetPoints} {targetPoints === 1 ? 'point' : 'points'}</span>
@@ -447,6 +483,16 @@ const Game = () => {
 						<button
 							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
 							onClick={() => {
+								// Get a reference to the image container element
+    const imageContainer = document.getElementById('image-container');
+
+    // Remove the existing img element, if it exists
+    const existingImgElement = imageContainer?.querySelector('img');
+    if (existingImgElement) {
+      imageContainer?.removeChild(existingImgElement);
+    }
+
+    // Call the guessWord() function and reset the transcript
 								guessWord();
 								resetTranscript();
 							}}

@@ -1,3 +1,7 @@
+/*
+Author: Henri Matvere
+*/
+
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Header from '../components/Header';
@@ -25,9 +29,9 @@ const GameOver = () => {
   
     const submitHighScore = async (name: string, score: number, language: string) => {
         //just for testing
-        if (isNaN(score)) {
-            score = 1;
-          }
+        //if (isNaN(score)) {
+         //   score = 1;
+         // }
 
           //if someone navigates to the url without palying they will have 0 score therefore no score can be submitted
           if(score==0){
@@ -102,13 +106,18 @@ const GameOver = () => {
           <h1 className="text-4xl font-bold mb-4">Game Over</h1>
           <h2 className="text-2xl font-bold mb-4">Your score: {points}</h2>
           <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                if (typeof inputLanguageName === 'string') {
-                  submitHighScore(name, Number(points), inputLanguageName);
-                }
-              }}
-          >
+  onSubmit={(e) => {
+    e.preventDefault();
+    if (name.trim() === '') {
+      alert('Please enter a valid username.');
+    if(Number(points)==0){
+       alert('Must have scored 1 or more.');
+    }
+    } else if (typeof inputLanguageName === 'string') {
+      submitHighScore(name, Number(points), inputLanguageName);
+    }
+  }}
+>
             <label className="mb-2">
               Your Name:
               <input
@@ -127,24 +136,46 @@ const GameOver = () => {
           </form>
           <div className="flex flex-col items-center justify-center">
           <h2 className="text-2xl font-bold mb-4">Leaderboard</h2>
-          <table>
-  <thead>
-    <tr>
-      <th>Score</th>
-      <th>Name</th>
-      <th>Language</th>
-    </tr>
-  </thead>
-  <tbody>
-    {leaderboard.map((entry, index) => (
-      <tr key={index}>
-        <td>{entry.score}</td>
-        <td>{entry.name}</td>
-        <td>{entry.language}</td>
+          <div style={{ maxHeight: '500px', overflowY: 'scroll' }}>
+  <table className="table-auto">
+    <thead>
+      <tr>
+        <th className="bg-gray-800 sticky top-0 px-4 py-2">Rank</th>
+        <th className="bg-gray-800 sticky top-0 px-4 py-2">Score</th>
+        <th className="bg-gray-800 sticky top-0 px-4 py-2">Name</th>
+        <th className="bg-gray-800 sticky top-0 px-4 py-2">Language</th>
       </tr>
-    ))}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {leaderboard.slice(0, 20).map((entry, index) => (
+        <tr key={index}>
+          <td>{index + 1}</td>
+          <td>{entry.score}</td>
+          <td>{entry.name}</td>
+          <td>{entry.language}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <style>{`
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background-color: #F2F2F2;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #000;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+  `}</style>
+</div>
 </div>
 </main>
         </div>
