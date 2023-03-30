@@ -20,13 +20,13 @@ import { Translate } from '@google-cloud/translate/build/src/v2';
 import { levels } from '../lib/levels';
 
 
-const LANGUAGE_MAP: {[key: string]: string} = {
+const LANGUAGE_MAP: { [key: string]: string } = {
 	'हिन्दी': 'hi-IN',
 	'ne-IP': 'ne-NP',
 	'ગુજરાતી': 'gu-IN'
-  };
+};
 
-const LANG_: {[key: string]: string} = {
+const LANG_: { [key: string]: string } = {
 	'Hindi': 'hi-IN',
 	'Nepali': 'ne-NP',
 	'Gujarati': 'gu-IN',
@@ -68,63 +68,64 @@ const Game = () => {
 	const [currentTranscript, setCurrentTranscript] = useState('');
 	const [listening, setListening] = useState(false);
 	const [level, setLevel] = useState(levels[0]);
-	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel );
-	const { transcript,resetTranscript } = useSpeechRecognition();
+	const [targetPoints, setTargetPoints] = useState<number>(level.pointsTillNextLevel);
+	const { transcript, resetTranscript } = useSpeechRecognition();
 	const [gameStarted, setGameStarted] = useState(false);
-	const [time, setTime] = useState(30);
+	const [time, setTime] = useState(60);
 	const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 	const [point, setPoint] = useState(1);
+	const [isLoading, setIsLoading] = useState(false);
 
 
-	  useEffect(() => {
+	useEffect(() => {
 		const startListening = async () => {
-		  try {
-			await SpeechRecognition.startListening({
-			  continuous: true,
-			  language: langCode,
-			});
-		  } catch (error) {
-			console.error('Error starting speech recognition:', error);
-		  }
+			try {
+				await SpeechRecognition.startListening({
+					continuous: true,
+					language: langCode,
+				});
+			} catch (error) {
+				console.error('Error starting speech recognition:', error);
+			}
 		};
-	
+
 		startListening();
-	  }, [languageCode]);
-	
-	  useEffect(() => {
-		  setGuess(transcript);
-		  console.log("transcript1:",[transcript])
-	  }, [transcript]);
+	}, [languageCode]);
+
+	useEffect(() => {
+		setGuess(transcript);
+		console.log("transcript1:", [transcript])
+	}, [transcript]);
 
 	//------------------------------------------------------ just debugging IGNORE
-	useEffect(() => {console.log('Current transcript:', transcript);}, [transcript]);
-	  const logTranscript = () => {console.log("Current transcript:", transcript);};
-	  // Add a useEffect hook to call logTranscript whenever the transcript value changes
-	  useEffect(() => {logTranscript();}, [transcript]);
+	useEffect(() => { console.log('Current transcript:', transcript); }, [transcript]);
+	const logTranscript = () => { console.log("Current transcript:", transcript); };
+	// Add a useEffect hook to call logTranscript whenever the transcript value changes
+	useEffect(() => { logTranscript(); }, [transcript]);
 	//just to see if mic is listening
-	useEffect(() => {console.log('Listening:', listening);}, [listening]);
-//------------------------------------------------------ just debugging IGNORE
+	useEffect(() => { console.log('Listening:', listening); }, [listening]);
+	//------------------------------------------------------ just debugging IGNORE
 
-	
+
 	//---------------------------------------------------------  non html5 version  below
 	function playText(text: string, langCode: string) {
 		SpeechRecognition.abortListening();
 		console.log("langCode::", langCode);
 		axios
-		  .get("https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce", {
-			headers: {
-			  "Access-Control-Allow-Origin": "*",
-			  "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, PATCH, DELETE",
-			  "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-			},
-			params: {
-			  text: text,
-			  langCode: langCode,
-			},
-			responseType: "blob",
-		  })
-		  .then((response) => {
-			const binaryData = response.data;
+			.get("https://us-central1-subtle-seat-368211.cloudfunctions.net/pronounce", {
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, PATCH, DELETE",
+					"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+				},
+				params: {
+					text: text,
+					langCode: langCode,
+				},
+				responseType: "blob",
+			})
+			.then((response) => {
+				const binaryData = response.data;
 				const blob = new Blob([binaryData], { type: 'audio/mpeg' });
 				const url = URL.createObjectURL(blob);
 				const newAudio = new Audio(url);
@@ -142,47 +143,62 @@ const Game = () => {
 				});
 
 				setAudio(newAudio);
-				
-		  })
-		  .catch((error) => {
-			console.error(error);
-		  });
-	  }
 
-	  async function loadImageAndPlayAudio(prompt: string, text: string, langCode: string) {
+			})
+			.catch((error) => {
+				console.error(error);
+			});
+	}
+
+	async function loadImageAndPlayAudio(prompt: string, text: string, langCode: string) {
 		try {
-		   // Load the image
-		   const imgURL = await generateImage(prompt);
+			// Load the image
+			setIsLoading(true);
+			const imgURL = await generateImage(prompt);
 
-		   // Wait for the image to load
-		   const image = new Image();
-		   image.src = imgURL as string;
-		   await new Promise((resolve) => {
-			 image.onload = resolve;
-		   });
+			// Create a spinner element and add the 'spinner' class
+			const spinner = document.createElement('div');
+			spinner.className = 'spinner';
 
-		   // Create an img element and set its src attribute to the generated image URL
-    const imgElement = document.createElement('img');
-    imgElement.src = imgURL as string;
+			// Get a reference to the image container element
+			const imageContainer = document.getElementById('image-container');
 
-    // Get a reference to the image container element
-    const imageContainer = document.getElementById('image-container');
+			
 
-    // Append the img element to the image container element
-    if (imageContainer !== null) {
-      imageContainer.appendChild(imgElement);
-    }
-	   
-		   // Play the audio
-		   playText(text, langCode);
-		 } catch (error) {
-		   console.error(error);
-		 }
-	   }
-	  
+			// Append the spinner element to the image container element
+			if (imageContainer !== null) {
+				imageContainer.appendChild(spinner);
+			}
 
-	   
-	
+			// Wait for the image to load
+			const image = new Image();
+			image.src = imgURL as string;
+
+			await new Promise((resolve) => {
+				image.onload = resolve;
+			});
+
+			// Remove the spinner from the image container
+			if (imageContainer !== null) {
+				imageContainer.removeChild(spinner);
+			}
+
+			// Create an img element and set its src attribute to the generated image URL
+			const imgElement = document.createElement('img');
+			imgElement.src = imgURL as string;
+
+			// Append the img element to the image container element
+			if (imageContainer !== null) {
+				imageContainer.appendChild(imgElement);
+			}
+			setIsLoading(false);
+			// Play the audio
+			playText(text, langCode);
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
 	useEffect(() => {
 		if (words.length === 0) return
 		if (currentWord === null) setCurrentWord(words[0])
@@ -206,37 +222,29 @@ const Game = () => {
 		// Update the level state
 		const nextLevelIndex = levels.findIndex((l) => l.id === level.id) + 1;
 		if (nextLevelIndex < levels.length) {
-			console.log("767")
-		  setLevel(levels[nextLevelIndex]);
-		  setTargetPoints(levels[nextLevelIndex].pointsTillNextLevel); // Set the target points for the next level
+			setLevel(levels[nextLevelIndex]);
+			setTargetPoints(levels[nextLevelIndex].pointsTillNextLevel); // Set the target points for the next level
 		} else {
-		  //user is max level, they keep going till they get bored. Do it where a certain number of wrong guesses in a row
-		  //e.g 4 means its game over, and you have to start from scratch
+			//user is max level, they keep going till they get bored. Do it where a certain number of wrong guesses in a row
+			//e.g 4 means its game over, and you have to start from scratch
 		}
-	  };
+	};
 
-
-	// const handleGuess = (transcript: string) => {
-	// 	if (transcript.trim() !== '') {
-	// 	  setGuess((prevGuess) => [...prevGuess, transcript.trim()]);
-	// 	  setCurrentTranscript('');
-	// 	  resetTranscript();
-	// 	}
-	//   };
 
 	async function getTranslatedWord(word: string) {
 		console.log('Received a translation request!');
-		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translate', 
-		{ 
-			//these can be removed from the client side
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-			  },
-			params: { word } });
+		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/translate',
+			{
+				//these can be removed from the client side
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+					'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+				},
+				params: { word }
+			});
 		const translation = response.data.translation;
-		console.log("translation:",response);
+		console.log("translation:", response);
 		//const response = await axios.get('/translate', { params: { word } });
 		return response.data.translation;
 		//return response.data;
@@ -244,39 +252,40 @@ const Game = () => {
 
 	//generate definition for word, also if able to use it to generate gujarati words
 	async function generateText(prompt: string) {
-		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-text', 
-		{
-			//these can be removed from the client side
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-				'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-			  },
-			params : {prompt}});
+		const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-text',
+			{
+				//these can be removed from the client side
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+					'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+				},
+				params: { prompt }
+			});
 		return response.data.text;
 	}
 
 	//generate image based on prompt.
 	async function generateImage(prompt: string) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image',
-        {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
-            'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-          },
-          params: { prompt }
-        });
-      const imgURL_ = response.data.imageUrl;
-      resolve(imgURL_);
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-	
+		return new Promise(async (resolve, reject) => {
+			try {
+				const response = await axios.get('https://us-central1-subtle-seat-368211.cloudfunctions.net/expressApi/generate-image',
+					{
+						headers: {
+							'Access-Control-Allow-Origin': '*',
+							'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+							'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+						},
+						params: { prompt }
+					});
+				const imgURL_ = response.data.imageUrl;
+				resolve(imgURL_);
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}
+
 	//dictionaries for each language (nepali and hindi are the same)
 	const hindiLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
 	const nepaliLink = 'https://raw.githubusercontent.com/bdrillard/english-hindi-dictionary/master/English-Hindi%20Dictionary.csv';
@@ -319,31 +328,20 @@ const Game = () => {
 				setCurrentWord(currentWord_);
 				//playText(currentWord_, languageCode);
 
-				const definition = await generateText("what does "+currentWord_+" mean?")
-				console.log("test:",definition)
+				const definition = await generateText("what does " + currentWord_ + " mean?")
+				console.log("test:", definition)
 				const wordDefinitionDiv = document.getElementById("word-definition");
 				if (wordDefinitionDiv !== null) {
-  					wordDefinitionDiv.innerHTML = definition.content;
-				}	
+					wordDefinitionDiv.innerHTML = definition.content;
+				}
 
 				//generate image and play audio.
 
 				try {
 					loadImageAndPlayAudio(translation, currentWord_, languageCode);
-					// const imageContainer = document.getElementById('image-container');
-					// if (imageContainer !== null) {
-					// 	//const imgElement = document.createElement('img');
-					// 	//imgElement.src = imageUrl;
-					// 	const existingImgElement = imageContainer.querySelector('img');
-					// 	if (existingImgElement) {
-					// 		imageContainer.replaceChild(image, existingImgElement);
-					// 	  } else {
-					// 		imageContainer.appendChild(image);
-					// 	  }
-					//   }
-				  } catch (error) {
+				} catch (error) {
 					console.log(`Error generating image and playing audio: ${error}`);
-				  }
+				}
 			});
 		} catch (error) {
 			console.log(error);
@@ -360,22 +358,24 @@ const Game = () => {
 			//correct guess
 			if (lastGuess.toLowerCase() === currentWord.toLowerCase()) {
 				setGuess('');
-  				setPoints((prevPoints) => {
-					
-    				const updatedPoints = prevPoints + (point);
-					setPoint((prevPoint) => (prevPoint + 1*(point*level.id*currentWord.length))); //increment
-    				console.log("1");
-    				console.log(updatedPoints);
+				setPoints((prevPoints) => {
 
-    				if (updatedPoints >= targetPoints) {
-      					levelUp();
-    					}
+					const updatedPoints = Math.floor(prevPoints + (point));
+					setPoint((prevPoint) => Math.floor(prevPoint + 1 * (point * level.id * (currentWord.length / 4)))); //increment
+					console.log("1");
+					console.log(updatedPoints);
+
+					if (updatedPoints >= targetPoints) {
+						levelUp();
+					}
 					return updatedPoints;
-  					});
+				});
 			}
 			setGuess('');
 			setPoint(1);//back to 1 point
 			setLevel(levels[0]);//back to level 1
+			setTargetPoints(levels[0].pointsTillNextLevel); //back to level 1
+
 
 			setGuess('');
 			setIsGuessing(false)
@@ -387,50 +387,50 @@ const Game = () => {
 
 	//when time runs out its game over
 	const Timer = ({ gameStarted, time }: { gameStarted: boolean, time: number }) => {
-	
-	  
+
+
 		useEffect(() => {
-		  if (gameStarted && time > 0) {
-			const timer = setTimeout(() => {
-			  setTime(time - 1);
-			}, 1000);
-	  
-			return () => clearTimeout(timer);
-		   } else if (gameStarted && time === 0){
-			
-			const inputLanguageName = Object.keys(LANG_).find(key => LANG_[key] === language);
+			if (gameStarted && time > 0) {
+				const timer = setTimeout(() => {
+					setTime(time - 1);
+				}, 1000);
 
-			
-			if (audio) {
-				audio.pause();
-			  }
+				return () => clearTimeout(timer);
+			} else if (gameStarted && time === 0) {
+
+				const inputLanguageName = Object.keys(LANG_).find(key => LANG_[key] === language);
 
 
-			console.log("inputLanguageName:",inputLanguageName);
-			router.push({
-				pathname: '/pronounciation-game-over',
-				query: { inputLanguageName, points },
-			  });
-		  }
+				if (audio) {
+					audio.pause();
+				}
+
+
+				console.log("inputLanguageName:", inputLanguageName);
+				router.push({
+					pathname: '/pronounciation-game-over',
+					query: { inputLanguageName, points },
+				});
+			}
 		}, [gameStarted, time]);
-	  
+
 		const minutes = Math.floor(time / 60).toString().padStart(2, '0');
 		const seconds = (time % 60).toString().padStart(2, '0');
 
-		
-	  
-		return (
-		  <div className="timer">
-			<div className="time-left" style={{ width: `${(time / 60) * 100}%` }}></div>
-			<div className="time-display">{`${minutes}:${seconds}`}</div>
-		  </div>
-		);
-	  };
 
-	  
-	  const handleStart = () => {
+
+		return (
+			<div className="timer">
+				<div className="time-left" style={{ width: `${(time / 60) * 100}%` }}></div>
+				<div className="time-display">{`${minutes}:${seconds}`}</div>
+			</div>
+		);
+	};
+
+
+	const handleStart = () => {
 		setGameStarted(true);
-	  };
+	};
 
 	return (
 		//bg-neutral-900 text-white h-screen snap-y snap-mandatory overflow-scroll z-0 scrollbar-hide
@@ -446,8 +446,8 @@ const Game = () => {
 					Pronunciation skills
 				</h1>
 				<div className="text-xl mb-4">
-							<span className="ml-4">Difficulty: {level.name}</span>
-						</div>
+					<span className="ml-4">Difficulty: {level.name}</span>
+				</div>
 				{isPlaying ? (
 					<div className="flex flex-col items-center">
 						<div className="text-xl mb-4">
@@ -484,15 +484,15 @@ const Game = () => {
 							className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded mt-4"
 							onClick={() => {
 								// Get a reference to the image container element
-    const imageContainer = document.getElementById('image-container');
+								const imageContainer = document.getElementById('image-container');
 
-    // Remove the existing img element, if it exists
-    const existingImgElement = imageContainer?.querySelector('img');
-    if (existingImgElement) {
-      imageContainer?.removeChild(existingImgElement);
-    }
+								// Remove the existing img element, if it exists
+								const existingImgElement = imageContainer?.querySelector('img');
+								if (existingImgElement) {
+									imageContainer?.removeChild(existingImgElement);
+								}
 
-    // Call the guessWord() function and reset the transcript
+								// Call the guessWord() function and reset the transcript
 								guessWord();
 								resetTranscript();
 							}}
@@ -506,7 +506,7 @@ const Game = () => {
 							className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
 							onClick={startGame}
 						>
-							
+
 							Start Game
 						</button>
 					</div>

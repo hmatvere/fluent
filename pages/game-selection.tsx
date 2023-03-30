@@ -9,7 +9,7 @@ import React from "react";
 
 type GameSelectionProps = {};
 
-function GameSelection({}: GameSelectionProps) {
+function GameSelection({ }: GameSelectionProps) {
   const router = useRouter();
 
   const { lang } = router.query;
@@ -51,5 +51,5 @@ function GameSelection({}: GameSelectionProps) {
     </div>
   );
 }
-  
-  export default GameSelection;
+
+export default GameSelection;
