@@ -6,25 +6,20 @@ const textToSpeech = require('@google-cloud/text-to-speech');
 const { PassThrough } = require('stream');
 const { Translate } = require('@google-cloud/translate').v2;
 const { Configuration, OpenAIApi } = require("openai");
-//const axios = require('axios');
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
-//const corsHandler = cors({ origin: '*' });
 const app = express();
-//const { getLeaderboard, addLeaderboardEntry } = 'functions';//database
-//import { getLeaderboard, addLeaderboardEntry } from 'functions';//database  pointless we are defining them in this file
-//app.use(cors({ origin: true }));
 
 const corsOptions = {
-  origin: "*",  //https://fluent-app-hmatvere.vercel.app
+  origin: "https://fluent-app-hmatvere.vercel.app",  //https://fluent-app-hmatvere.vercel.app
   optionsSuccessStatus: 200,
 };
 const corsHandler = cors(corsOptions);
 app.use(corsHandler);
 
 // Allow preflight requests
-app.options('*', cors(corsOptions));
+app.options('https://fluent-app-hmatvere.vercel.app', cors(corsOptions));
 
 //const corsMiddleware = cors(corsOptions);
 // The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
@@ -69,7 +64,7 @@ process.env.GOOGLE_APPLICATION_CREDENTIALS = "application_default_credentials.js
 
 class AudioController {
   static async apiGetPronounce(req, res, next) {
-  
+
     try {
       const request = {
         input: { text: req.query.text },
@@ -122,20 +117,20 @@ const openai = new OpenAIApi(configuration);
 
 app.get('/translate', async (req, res) => {
   console.log("logging")
-      // Set CORS headers for preflight requests
-if (req.method === 'OPTIONS') {
-  // Allows GET requests from any origin with the Content-Type header
-  // and caches preflight response for 3600s
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.set('Access-Control-Max-Age', '3600');
-  res.status(204).send('');
-} else {
-  // Set CORS headers for main requests
-  res.set('Access-Control-Allow-Origin', '*');
-  // other code
-}
+  // Set CORS headers for preflight requests
+  if (req.method === 'OPTIONS') {
+    // Allows GET requests from any origin with the Content-Type header
+    // and caches preflight response for 3600s
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+  } else {
+    // Set CORS headers for main requests
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    // other code
+  }
   const { word } = req.query;
   try {
 
@@ -145,33 +140,64 @@ if (req.method === 'OPTIONS') {
     //Sends the translated word back to the client-side
     res.send({ translation });
   } catch (e) {
-   console.error(`Failed to translate ${word} to English: ${e}`);
-  res.status(500).send({ error: `Failed to translate ${word} to English` });
+    console.error(`Failed to translate ${word} to English: ${e}`);
+    res.status(500).send({ error: `Failed to translate ${word} to English` });
   }
 });
 
-app.get('/generate-text',  async (req, res) => {
+app.get('/translateTarget', async (req, res) => {
+
+  if (req.method === 'OPTIONS') {
+    // Allows GET requests from any origin with the Content-Type header
+    // and caches preflight response for 3600s
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+  } else {
+    // Set CORS headers for main requests
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    // other code
+  }
+
+  const { word } = req.query;
+  const { targetLanguage } = req.query
+
+  try {
+    // Translates the word to English
+    const [translation] = await translate.translate(word, targetLanguage);
+
+    // Sends the translated word back to the client-side
+    res.send({ translation });
+  } catch (e) {
+    console.error(`Failed to translate ${word} to English: ${e}`);
+    res.status(500).send({ error: `Failed to translate ${word} to English` });
+  }
+});
+
+app.get('/generate-text', async (req, res) => {
   //const { prompt, length } = req.body;
 
-      // Set CORS headers for preflight requests
-if (req.method === 'OPTIONS') {
-  // Allows GET requests from any origin with the Content-Type header
-  // and caches preflight response for 3600s
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.set('Access-Control-Max-Age', '3600');
-  res.status(204).send('');
-} else {
-  // Set CORS headers for main requests
-  res.set('Access-Control-Allow-Origin', '*');
-  // other code
-}
+  // Set CORS headers for preflight requests
+  if (req.method === 'OPTIONS') {
+    // Allows GET requests from any origin with the Content-Type header
+    // and caches preflight response for 3600s
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+  } else {
+    // Set CORS headers for main requests
+    res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+    // other code
+  }
 
   const { prompt } = req.query;
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
-    messages: [{role: "user", content: prompt}],
+    messages: [{ role: "user", content: prompt }],
   });
   const text = completion.data.choices[0].message;
   res.send({ text });
@@ -179,24 +205,24 @@ if (req.method === 'OPTIONS') {
 
 exports.generateText = functions.https.onRequest(app);
 
-app.get('/generate-image', cors(corsOptions),async (req,res) => {
+app.get('/generate-image', cors(corsOptions), async (req, res) => {
 
   const { prompt } = req.query;
   try {
-     // Set CORS headers for preflight requests
-if (req.method === 'OPTIONS') {
-  // Allows GET requests from any origin with the Content-Type header
-  // and caches preflight response for 3600s
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.set('Access-Control-Max-Age', '3600');
-  res.status(204).send('');
-} else {
-  // Set CORS headers for main requests
-  res.set('Access-Control-Allow-Origin', '*');
-  // other code
-}
+    // Set CORS headers for preflight requests
+    if (req.method === 'OPTIONS') {
+      // Allows GET requests from any origin with the Content-Type header
+      // and caches preflight response for 3600s
+      res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Max-Age', '3600');
+      res.status(204).send('');
+    } else {
+      // Set CORS headers for main requests
+      res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
+      // other code
+    }
     const response = await openai.createImage({
       prompt: prompt,
       n: 1,
@@ -215,7 +241,7 @@ if (req.method === 'OPTIONS') {
 
 //exports.generateImage = functions.https.onRequest(translateApp);
 //app.get('/generate-text',  async (req, res) => {
-app.get('/getLeaderboard',async (req, res) => {
+app.get('/getLeaderboard', async (req, res) => {
 
   // These headers don't seem to fix the CORS issue
   res.header("Access-Control-Allow-Origin", "firestore.googleapis.com");
@@ -223,27 +249,25 @@ app.get('/getLeaderboard',async (req, res) => {
   res.header("Access-Control-Allow-Methods", "DELETE, GET, POST, PUT, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", true);
-  res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
   res.set('Access-Control-Allow-Methods', 'GET');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-    try {
-      const snapshot = await admin.firestore().collection('leaderboard').get();
-      const leaderboardData = [];
-      snapshot.forEach((doc) => {
-        console.log(doc.id, '=>', doc.data());
-        leaderboardData.push({id: doc.id, ...doc.data()});
-      });
-      res.status(200).json(leaderboardData);
-    } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
-      res.status(500).json({ error: 'Error fetching leaderboard data' });
-    }
+  try {
+    const snapshot = await admin.firestore().collection('leaderboard').get();
+    const leaderboardData = [];
+    snapshot.forEach((doc) => {
+      console.log(doc.id, '=>', doc.data());
+      leaderboardData.push({ id: doc.id, ...doc.data() });
+    });
+    res.status(200).json(leaderboardData);
+  } catch (error) {
+    console.error('Error fetching leaderboard data:', error);
+    res.status(500).json({ error: 'Error fetching leaderboard data' });
+  }
 });
 
 app.post('/inputScoreToLeaderboard', async (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Origin', 'https://fluent-app-hmatvere.vercel.app');
   res.set('Access-Control-Allow-Methods', 'GET, POST');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -273,9 +297,9 @@ app.post('/inputScoreToLeaderboard', async (req, res) => {
   }
 });
 
-app.get('/', (req,res) => {
+app.get('/', (req, res) => {
   res.send('asdjkl;fghbsdfil;hkghjkldfgbm,.bdlKfghjuiklsdrwvg idf,.gvuk');
-}); 
+});
 
 
 
